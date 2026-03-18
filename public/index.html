@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>XAU · Terminal Live</title>
+<title>XAU · Terminal Live v8 · MFC</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -14,6 +14,8 @@
   --red:#ff4d6d;--red2:rgba(255,77,109,0.14);--red3:rgba(255,77,109,0.06);
   --amber:#f5a623;--amber2:rgba(245,166,35,0.14);--amber3:rgba(245,166,35,0.06);
   --blue:#38b6ff;--blue2:rgba(56,182,255,0.12);
+  --purple:#a78bfa;--purple2:rgba(167,139,250,0.14);--purple3:rgba(167,139,250,0.06);
+  --teal:#2dd4bf;
   --mono:'IBM Plex Mono',monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -23,72 +25,80 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes pulse{0%{opacity:.3;transform:scale(.97)}100%{opacity:1;transform:scale(1)}}
 @keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes barGrow{from{width:0}to{width:var(--w)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
-/* HEADER */
+/* ── HEADER ─────────────────────────────────────────────────────────── */
 .hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-bottom:1px solid var(--border2);background:var(--bg2);position:sticky;top:0;z-index:200}
 .logo{font-size:13px;font-weight:600;color:var(--green);letter-spacing:.12em}
 .logo em{color:var(--muted);font-style:normal;font-weight:300}
 .hdr-tags{display:flex;gap:8px}
 .htag{font-size:9px;padding:2px 7px;border-radius:3px;border:1px solid var(--border2);color:var(--muted);letter-spacing:.08em}
-.hdr-right{display:flex;align-items:center;gap:14px}
+.htag.new{border-color:rgba(167,139,250,.4);color:var(--purple)}
 .clock{font-size:13px;font-weight:500;letter-spacing:.06em}
 .ldot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1.4s ease-in-out infinite}
 .llbl{font-size:9px;color:var(--green);letter-spacing:.1em}
 
-/* FETCH BAR */
+/* ── FETCH BAR ─────────────────────────────────────────────────────── */
 .fetch-bar{display:flex;align-items:center;gap:10px;padding:8px 18px;background:var(--bg2);border-bottom:1px solid var(--border);flex-wrap:wrap}
 .fetch-btn{display:flex;align-items:center;gap:7px;padding:7px 16px;background:var(--green2);border:1px solid var(--green);border-radius:4px;color:var(--green);font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.08em;cursor:pointer;transition:all .2s;white-space:nowrap}
 .fetch-btn:hover{background:rgba(25,230,160,.22)}
 .fetch-btn:disabled{opacity:.4;cursor:not-allowed}
-.ficon{width:13px;height:13px;flex-shrink:0;transition:transform .2s}
+.ficon{width:13px;height:13px;flex-shrink:0}
 .spin{animation:spin .8s linear infinite}
+.server-badge{font-size:9px;padding:2px 8px;border-radius:3px;background:var(--green2);border:1px solid rgba(25,230,160,.4);color:var(--green);white-space:nowrap}
 .fetch-status{font-size:10px;color:var(--muted);flex:1}
-.server-badge{font-size:9px;padding:2px 8px;border-radius:3px;background:var(--green2);border:1px solid rgba(25,230,160,.4);color:var(--green)}
 .src-chips{display:flex;gap:5px;flex-wrap:wrap}
 .schip{font-size:9px;padding:2px 7px;border-radius:3px;border:1px solid var(--border);color:var(--muted);background:var(--bg3)}
 .schip.ok{border-color:rgba(25,230,160,.35);color:var(--green)}
 .schip.err{border-color:rgba(255,77,109,.35);color:var(--red)}
 .schip.loading{border-color:rgba(245,166,35,.35);color:var(--amber);animation:blink .6s ease-in-out infinite}
+.schip.mfc{border-color:rgba(167,139,250,.35);color:var(--purple)}
+.schip.mfc.ok{border-color:rgba(167,139,250,.6);color:var(--purple);background:var(--purple3)}
 .countdown{font-size:9px;color:var(--dim);white-space:nowrap}
 
-/* TICKER */
+/* ── TICKER ────────────────────────────────────────────────────────── */
 .ticker-wrap{overflow:hidden;border-bottom:1px solid var(--border);background:var(--bg2);padding:5px 0}
-.ticker{display:flex;gap:36px;animation:scroll 32s linear infinite;width:max-content}
+.ticker{display:flex;gap:36px;animation:scroll 36s linear infinite;width:max-content}
 .ti{display:flex;align-items:center;gap:7px;font-size:11px;white-space:nowrap}
-.ti-n{color:var(--muted)} .ti-v{font-weight:500}
-.pos{color:var(--green)} .neg{color:var(--red)} .neu{color:var(--amber)}
+.ti-n{color:var(--muted)}.ti-v{font-weight:500}
+.pos{color:var(--green)}.neg{color:var(--red)}.neu{color:var(--amber)}
 
-/* SIGNAL BANNER */
+/* ── SIGNAL BANNER ────────────────────────────────────────────────── */
 .sig-banner{margin:10px 18px;border-radius:6px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border:1px solid;transition:all .4s}
 .sig-banner.buy{background:var(--green3);border-color:var(--green)}
 .sig-banner.sell{background:var(--red3);border-color:var(--red)}
 .sig-banner.wait{background:var(--amber3);border-color:var(--amber)}
 .sig-label{font-size:20px;font-weight:600;letter-spacing:.12em}
-.buy .sig-label{color:var(--green)} .sell .sig-label{color:var(--red)} .wait .sig-label{color:var(--amber)}
+.buy .sig-label{color:var(--green)}.sell .sig-label{color:var(--red)}.wait .sig-label{color:var(--amber)}
 .sig-meta{font-size:11px;color:var(--muted);margin-top:4px}
 .sig-meta b{color:var(--text);font-weight:500}
 .sig-right{display:flex;align-items:center;gap:20px}
 .score-ring{position:relative;width:62px;height:62px}
 .score-ring svg{transform:rotate(-90deg)}
 .score-num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:15px;font-weight:600}
-.buy .score-num{color:var(--green)} .sell .score-num{color:var(--red)} .wait .score-num{color:var(--amber)}
+.buy .score-num{color:var(--green)}.sell .score-num{color:var(--red)}.wait .score-num{color:var(--amber)}
 .sig-levels{font-size:11px;text-align:right}
 .sig-levels .lbl{font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
 .sig-levels .val{font-weight:500;margin-bottom:5px}
 
-/* GRIDS */
+/* ── GRIDS ─────────────────────────────────────────────────────────── */
 .g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:0 18px;margin-bottom:8px}
 .g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:0 18px;margin-bottom:8px}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 18px;margin-bottom:8px}
 .g2l{display:grid;grid-template-columns:2fr 1fr;gap:8px;padding:0 18px;margin-bottom:8px}
+.gmfc{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:8px;padding:0 18px;margin-bottom:8px}
 
-/* PANEL */
+/* ── PANEL ─────────────────────────────────────────────────────────── */
 .panel{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px 14px;position:relative;overflow:hidden}
 .panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent)}
+.panel.mfc-panel{border-color:rgba(167,139,250,.2)}
+.panel.mfc-panel::before{background:linear-gradient(90deg,transparent,rgba(167,139,250,.3),transparent)}
 .ptitle{font-size:9px;font-weight:600;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px}
+.ptitle.purple{color:var(--purple)}
 .psrc{color:var(--dim);font-weight:400;font-size:8px}
 
-/* DATA CELLS */
+/* ── DATA CELLS ───────────────────────────────────────────────────── */
 .data-cell{background:var(--bg3);border-radius:5px;padding:10px 12px}
 .dc-lbl{font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
 .dc-val{font-size:20px;font-weight:600;color:var(--text);margin-bottom:2px;min-height:28px;display:flex;align-items:center;gap:8px}
@@ -96,32 +106,62 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 .loading-val{color:var(--dim);font-size:13px}
 .pulse{animation:pulse .6s ease-out}
 
-/* PILLAR ROWS */
+/* ── PILLAR ROWS ──────────────────────────────────────────────────── */
 .pr{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
 .pr:last-child{border-bottom:none}
 .pdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .pd-g{background:var(--green);box-shadow:0 0 5px var(--green)}
 .pd-r{background:var(--red);box-shadow:0 0 5px var(--red)}
 .pd-a{background:var(--amber);box-shadow:0 0 5px var(--amber)}
+.pd-p{background:var(--purple);box-shadow:0 0 5px var(--purple)}
 .pd-d{background:var(--dim)}
 .pname{font-size:11px;color:var(--text);flex:1}
 .pval{font-size:11px;font-weight:500;min-width:90px;text-align:right}
 .psig{font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600;letter-spacing:.06em;margin-left:6px}
-.ps-b{background:var(--green2);color:var(--green)} .ps-s{background:var(--red2);color:var(--red)} .ps-w{background:var(--amber2);color:var(--amber)}
+.ps-b{background:var(--green2);color:var(--green)}.ps-s{background:var(--red2);color:var(--red)}.ps-w{background:var(--amber2);color:var(--amber)}.ps-p{background:var(--purple2);color:var(--purple)}
 .score-row{display:flex;align-items:center;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
 .prog{background:var(--bg3);border-radius:2px;height:5px;overflow:hidden;flex:1}
 .prog-f{height:100%;border-radius:2px;transition:width .5s,background .4s}
 
-/* ALERTS */
+/* ── MFC CHART ────────────────────────────────────────────────────── */
+.mfc-bar-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);animation:fadeUp .3s ease-out both}
+.mfc-bar-row:last-child{border-bottom:none}
+.mfc-rank{font-size:9px;color:var(--dim);width:14px;text-align:center;flex-shrink:0}
+.mfc-currency{font-size:12px;font-weight:600;width:32px;flex-shrink:0}
+.mfc-bar-wrap{flex:1;height:16px;background:var(--bg3);border-radius:3px;overflow:hidden;position:relative}
+.mfc-bar-fill{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.mfc-pct{font-size:11px;font-weight:500;width:50px;text-align:right;flex-shrink:0}
+.mfc-raw{font-size:9px;color:var(--muted);width:54px;text-align:right;flex-shrink:0}
+
+/* Currency colours */
+.usd-col{color:#60a5fa}.eur-col{color:#34d399}.gbp-col{color:#a78bfa}
+.jpy-col{color:#f87171}.chf-col{color:#fbbf24}.cad-col{color:#f97316}
+.aud-col{color:#22d3ee}.nzd-col{color:#e879f9}
+
+/* ── MFC SIGNAL ────────────────────────────────────────────────────── */
+.mfc-signal-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.mfc-sig-card{background:var(--bg3);border-radius:4px;padding:8px 10px;border-left:3px solid}
+.mfc-sig-card .sc-lbl{font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+.mfc-sig-card .sc-pair{font-size:14px;font-weight:600}
+.mfc-sig-card .sc-why{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.5}
+
+/* ── PAIR HEATMAP ──────────────────────────────────────────────────── */
+.heat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.heat-cell{border-radius:3px;padding:5px 6px;text-align:center}
+.heat-ticker{font-size:9px;color:var(--muted);margin-bottom:2px}
+.heat-val{font-size:11px;font-weight:600}
+
+/* ── ALERTS ─────────────────────────────────────────────────────────── */
 .alert{border-left:3px solid;padding:8px 11px;border-radius:0 5px 5px 0;margin-bottom:6px;font-size:11px;line-height:1.6}
 .alert:last-child{margin-bottom:0}
 .alert.crit{border-color:var(--red);background:var(--red3);color:#ffb3c0}
 .alert.warn{border-color:var(--amber);background:var(--amber3);color:#fde68a}
 .alert.good{border-color:var(--green);background:var(--green3);color:#a7f3d0}
 .alert.info{border-color:var(--blue);background:var(--blue2);color:#bae6fd}
+.alert.mfc-alert{border-color:var(--purple);background:var(--purple3);color:#ddd6fe}
 .at{font-weight:600;letter-spacing:.04em;margin-bottom:2px}
 
-/* GEX */
+/* ── GEX ────────────────────────────────────────────────────────────── */
 .gex-row{display:flex;align-items:center;gap:5px;padding:3px 0}
 .gex-px{width:50px;text-align:right;font-size:11px;color:var(--muted);flex-shrink:0}
 .gex-px.active{color:var(--amber);font-weight:600}
@@ -135,7 +175,7 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 .rb-long{background:var(--green2);color:var(--green);border:1px solid rgba(25,230,160,.4)}
 .rb-flip{background:var(--amber2);color:var(--amber);border:1px solid rgba(245,166,35,.4)}
 
-/* MISC */
+/* ── MISC ────────────────────────────────────────────────────────────── */
 .mstat{text-align:center}
 .mstat .mv{font-size:18px;font-weight:600;min-height:27px}
 .mstat .ml{font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
@@ -167,25 +207,28 @@ select.inp{cursor:pointer;appearance:none;padding-right:22px;background-image:ur
 .scen-prog{height:2px;border-radius:2px;margin-top:6px;opacity:.5}
 .ftr{padding:8px 18px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:9px;color:var(--dim);flex-wrap:wrap;gap:4px}
 
-@media(max-width:880px){.g4{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr}.g2l{grid-template-columns:1fr}}
+@media(max-width:900px){.g4{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr}.g2l{grid-template-columns:1fr}.gmfc{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 
+<!-- HEADER -->
 <div class="hdr">
   <div style="display:flex;align-items:center;gap:14px">
-    <div class="logo">XAU<em>/USD</em> TERMINAL <em style="font-size:9px">v6</em></div>
+    <div class="logo">XAU<em>/USD</em> TERMINAL <em style="font-size:9px">v8</em></div>
     <div class="hdr-tags">
-      <div class="htag">SMART MONEY · 5 PILARES</div>
-      <div class="htag" id="server-mode-tag">SERVIDOR DIRETO · SEM PROXY</div>
+      <div class="htag">SMART MONEY · 6 PILARES</div>
+      <div class="htag">SERVIDOR DIRETO · SEM PROXY</div>
+      <div class="htag new">✦ MFC · 28 PARES · NOVO</div>
     </div>
   </div>
-  <div class="hdr-right">
+  <div style="display:flex;align-items:center;gap:14px">
     <div class="clock" id="clock">--:--:--</div>
     <div style="display:flex;align-items:center;gap:5px"><div class="ldot"></div><div class="llbl">LIVE</div></div>
   </div>
 </div>
 
+<!-- FETCH BAR -->
 <div class="fetch-bar">
   <button class="fetch-btn" id="fetch-btn" onclick="fetchAll()">
     <svg class="ficon" id="ficon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -193,20 +236,22 @@ select.inp{cursor:pointer;appearance:none;padding-right:22px;background-image:ur
     </svg>
     BUSCAR DADOS AGORA
   </button>
-  <div class="server-badge">✓ SERVIDOR NODE.JS · ACESSO DIRETO · SEM BLOQUEIOS</div>
-  <div class="fetch-status" id="fetch-status">Pronto para buscar dados via servidor direto →</div>
+  <div class="server-badge">✓ NODE.JS · DIRETO · SEM BLOQUEIOS</div>
+  <div class="fetch-status" id="fetch-status">Pronto — inclui MFC (28 pares forex) →</div>
   <div class="src-chips">
     <div class="schip" id="chip-xau">XAU</div>
     <div class="schip" id="chip-dxy">DXY</div>
     <div class="schip" id="chip-wti">WTI</div>
     <div class="schip" id="chip-eur">EUR</div>
-    <div class="schip" id="chip-ust">UST 10Y</div>
+    <div class="schip" id="chip-ust">UST</div>
     <div class="schip" id="chip-tips">TIPS</div>
-    <div class="schip" id="chip-fed">FED Bal.</div>
+    <div class="schip" id="chip-fed">FED</div>
+    <div class="schip mfc" id="chip-mfc">MFC 28p</div>
   </div>
-  <div class="countdown" id="countdown">Auto-refresh: —</div>
+  <div class="countdown" id="countdown">Auto: —</div>
 </div>
 
+<!-- TICKER -->
 <div class="ticker-wrap">
   <div class="ticker">
     <div class="ti"><span class="ti-n">XAU/USD</span><span class="ti-v" id="tk-xau">—</span><span id="tk-xau-c" class="neu">—</span></div>
@@ -215,23 +260,27 @@ select.inp{cursor:pointer;appearance:none;padding-right:22px;background-image:ur
     <div class="ti"><span class="ti-n">EUR/USD</span><span class="ti-v" id="tk-eur">—</span></div>
     <div class="ti"><span class="ti-n">UST 10Y</span><span class="ti-v" id="tk-ust">—</span></div>
     <div class="ti"><span class="ti-n">TIPS 10Y</span><span class="ti-v" id="tk-tips">—</span></div>
+    <div class="ti"><span class="ti-n">USD Força</span><span class="ti-v" id="tk-usd-str">—</span><span id="tk-usd-rank" class="neu">—</span></div>
+    <div class="ti"><span class="ti-n">MFC Top</span><span class="ti-v" id="tk-mfc-top">—</span><span class="pos">↑ mais forte</span></div>
+    <div class="ti"><span class="ti-n">MFC Bot</span><span class="ti-v" id="tk-mfc-bot">—</span><span class="neg">↓ mais fraca</span></div>
     <div class="ti"><span class="ti-n">COT Net Long</span><span class="ti-v">+160.145</span><span class="neg">▼ -2 sem.</span></div>
-    <div class="ti"><span class="ti-n">ETF GLD Flows</span><span class="ti-v">+$5.3Bn</span><span class="pos">9 meses ▲</span></div>
-    <div class="ti"><span class="ti-n">GEX Regime</span><span class="ti-v">Short Gamma</span><span class="neg">⚠</span></div>
+    <div class="ti"><span class="ti-n">ETF Flows</span><span class="ti-v">+$5.3Bn</span><span class="pos">9 meses ▲</span></div>
+    <!-- duplicate -->
     <div class="ti"><span class="ti-n">XAU/USD</span><span class="ti-v" id="tk-xau2">—</span></div>
     <div class="ti"><span class="ti-n">DXY</span><span class="ti-v" id="tk-dxy2">—</span></div>
     <div class="ti"><span class="ti-n">WTI</span><span class="ti-v" id="tk-wti2">—</span></div>
-    <div class="ti"><span class="ti-n">UST 10Y</span><span class="ti-v" id="tk-ust2">—</span></div>
-    <div class="ti"><span class="ti-n">TIPS 10Y</span><span class="ti-v" id="tk-tips2">—</span></div>
+    <div class="ti"><span class="ti-n">USD Força</span><span class="ti-v" id="tk-usd-str2">—</span></div>
+    <div class="ti"><span class="ti-n">MFC Top</span><span class="ti-v" id="tk-mfc-top2">—</span></div>
     <div class="ti"><span class="ti-n">COT Net Long</span><span class="ti-v">+160.145</span><span class="neg">▼</span></div>
   </div>
 </div>
 
+<!-- SIGNAL BANNER -->
 <div class="sig-banner wait" id="sig-banner">
   <div>
-    <div style="font-size:9px;color:var(--muted);letter-spacing:.1em">SINAL COMBINADO · 5 PILARES INSTITUCIONAIS</div>
+    <div style="font-size:9px;color:var(--muted);letter-spacing:.1em">SINAL COMBINADO · 6 PILARES INSTITUCIONAIS + MFC</div>
     <div class="sig-label" id="sig-label">⬤ PRESSIONE BUSCAR DADOS</div>
-    <div class="sig-meta">Divergência: <b id="sig-div">—</b> · Confiança: <b id="sig-conf">—</b> · Regime: <b id="sig-regime">—</b></div>
+    <div class="sig-meta">Divergência: <b id="sig-div">—</b> · Confiança: <b id="sig-conf">—</b> · Regime: <b id="sig-regime">—</b> · USD Força: <b id="sig-usd">—</b></div>
   </div>
   <div class="sig-right">
     <div class="score-ring">
@@ -249,6 +298,7 @@ select.inp{cursor:pointer;appearance:none;padding-right:22px;background-image:ur
   </div>
 </div>
 
+<!-- LIVE DATA CELLS -->
 <div class="g4" style="margin-top:8px">
   <div class="data-cell"><div class="dc-lbl">XAU/USD SPOT <span id="age-xau" style="font-size:8px;color:var(--dim)">—</span></div><div class="dc-val" id="v-xau"><span class="loading-val">aguardando...</span></div><div class="dc-sub">Gold Futures · GC=F</div></div>
   <div class="data-cell"><div class="dc-lbl">DXY INDEX <span id="age-dxy" style="font-size:8px;color:var(--dim)">—</span></div><div class="dc-val" id="v-dxy"><span class="loading-val">aguardando...</span></div><div class="dc-sub">ICE US Dollar Index</div></div>
@@ -258,20 +308,74 @@ select.inp{cursor:pointer;appearance:none;padding-right:22px;background-image:ur
 <div class="g4">
   <div class="data-cell"><div class="dc-lbl">WTI PETRÓLEO <span id="age-wti" style="font-size:8px;color:var(--dim)">—</span></div><div class="dc-val" id="v-wti"><span class="loading-val">aguardando...</span></div><div class="dc-sub">Crude Oil · CL=F</div></div>
   <div class="data-cell"><div class="dc-lbl">EUR/USD <span id="age-eur" style="font-size:8px;color:var(--dim)">—</span></div><div class="dc-val" id="v-eur"><span class="loading-val">aguardando...</span></div><div class="dc-sub">Forex · EURUSD=X</div></div>
-  <div class="data-cell"><div class="dc-lbl">COT NON-COMM. <span style="font-size:8px;color:var(--dim)">CFTC · Semanal</span></div><div class="dc-val pos" id="v-cot">+160.145</div><div class="dc-sub">▼ -2 sem. · override manual ↓</div></div>
-  <div class="data-cell"><div class="dc-lbl">ETF FLOWS GLD/IAU <span style="font-size:8px;color:var(--dim)">WGC · Mensal</span></div><div class="dc-val pos">+$5.3Bn</div><div class="dc-sub">Fev/26 · 9 meses inflow ▲</div></div>
+  <div class="data-cell"><div class="dc-lbl">COT NON-COMM. <span style="font-size:8px;color:var(--dim)">CFTC Semanal</span></div><div class="dc-val pos">+160.145</div><div class="dc-sub">▼ -2 sem. · override ↓</div></div>
+  <div class="data-cell"><div class="dc-lbl">ETF FLOWS GLD/IAU <span style="font-size:8px;color:var(--dim)">WGC Mensal</span></div><div class="dc-val pos">+$5.3Bn</div><div class="dc-sub">Fev/26 · 9 meses inflow ▲</div></div>
 </div>
 
+<!-- ════════════════════════════════════════════════════════════════════
+     MFC — MÓDULO DE FORÇA DE MOEDAS (NOVO)
+     ════════════════════════════════════════════════════════════════════ -->
+<div style="padding:0 18px;margin-bottom:4px">
+  <div style="font-size:9px;font-weight:600;color:var(--purple);letter-spacing:.12em;text-transform:uppercase;display:flex;align-items:center;gap:8px">
+    <span style="width:24px;height:1px;background:var(--purple);opacity:.5;display:inline-block"></span>
+    MÓDULO MFC — FORÇA DAS MOEDAS · 28 PARES · METODOLOGIA MATAF
+    <span style="flex:1;height:1px;background:var(--purple);opacity:.2;display:inline-block"></span>
+    <span style="font-size:8px;color:var(--dim)" id="mfc-ts">—</span>
+    <span style="font-size:8px;padding:1px 6px;border-radius:3px;background:var(--purple3);color:var(--purple);border:1px solid rgba(167,139,250,.3)" id="mfc-pairs-loaded">— / 28</span>
+  </div>
+</div>
+
+<div class="gmfc">
+  <!-- BAR CHART PRINCIPAL -->
+  <div class="panel mfc-panel">
+    <div class="ptitle purple">
+      RANKING DE FORÇA — 8 MOEDAS
+      <span class="psrc">28 pares · % variação média</span>
+    </div>
+    <div id="mfc-bars">
+      <div style="color:var(--dim);font-size:11px;padding:20px 0;text-align:center">Aguardando fetch para calcular MFC...</div>
+    </div>
+  </div>
+
+  <!-- SINAIS MFC -->
+  <div class="panel mfc-panel">
+    <div class="ptitle purple">SINAIS MFC — OPORTUNIDADES</div>
+    <div id="mfc-signals">
+      <div style="color:var(--dim);font-size:11px">Aguardando...</div>
+    </div>
+    <div class="sep"></div>
+    <div class="ptitle purple" style="margin-bottom:6px">USD vs. XAU ANÁLISE</div>
+    <div id="mfc-xau-analysis" style="font-size:11px;color:var(--muted);line-height:1.7">
+      Aguardando dados MFC...
+    </div>
+  </div>
+
+  <!-- HEATMAP 28 PARES -->
+  <div class="panel mfc-panel">
+    <div class="ptitle purple">HEATMAP — TOP 12 PARES</div>
+    <div id="mfc-heatmap">
+      <div style="color:var(--dim);font-size:11px">Aguardando...</div>
+    </div>
+    <div class="sep"></div>
+    <div class="ptitle purple" style="margin-bottom:6px">P6 · USD FORÇA (SCORE)</div>
+    <div id="p6-display" style="font-size:11px;color:var(--muted)">
+      USD strength integrado como P6 no score (peso 10%)
+    </div>
+  </div>
+</div>
+
+<!-- PILARES + GEX + ALERTS -->
 <div class="g2l">
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
     <div class="panel">
-      <div class="ptitle">5 PILARES <span class="psrc">AUTO-SCORE</span></div>
+      <div class="ptitle">6 PILARES <span class="psrc">AUTO-SCORE + MFC</span></div>
       <div id="pillar-list">
         <div class="pr"><div class="pdot pd-d"></div><div class="pname">P1 · COT</div><div class="pval">—</div><div class="psig ps-w">—</div></div>
-        <div class="pr"><div class="pdot pd-d"></div><div class="pname">P2 · ETF Flows</div><div class="pval">—</div><div class="psig ps-w">—</div></div>
+        <div class="pr"><div class="pdot pd-d"></div><div class="pname">P2 · ETF</div><div class="pval">—</div><div class="psig ps-w">—</div></div>
         <div class="pr"><div class="pdot pd-d"></div><div class="pname">P3 · TIPS</div><div class="pval">—</div><div class="psig ps-w">—</div></div>
         <div class="pr"><div class="pdot pd-d"></div><div class="pname">P4 · FED</div><div class="pval">—</div><div class="psig ps-w">—</div></div>
         <div class="pr"><div class="pdot pd-d"></div><div class="pname">P5 · GEX</div><div class="pval">—</div><div class="psig ps-w">—</div></div>
+        <div class="pr"><div class="pdot pd-d"></div><div class="pname">P6 · USD MFC</div><div class="pval">—</div><div class="psig ps-w">—</div></div>
       </div>
       <div class="score-row">
         <span style="font-size:9px;color:var(--muted);width:50px">SCORE</span>
@@ -292,17 +396,19 @@ select.inp{cursor:pointer;appearance:none;padding-right:22px;background-image:ur
   </div>
   <div class="panel">
     <div class="ptitle">ALERTAS <span class="psrc">TEMPO REAL</span></div>
-    <div id="alerts-box"><div class="alert info"><div class="at">◎ AGUARDANDO</div>Pressione "BUSCAR DADOS AGORA". Servidor Node.js faz acesso direto ao Yahoo Finance e FRED — sem proxies, sem bloqueios.</div></div>
+    <div id="alerts-box"><div class="alert info"><div class="at">◎ AGUARDANDO</div>Busque dados para ativar todos os alertas incluindo MFC.</div></div>
   </div>
 </div>
 
+<!-- MINI STATS -->
 <div class="g4">
   <div class="panel mstat"><div class="ml">ENTRADA</div><div class="mv pos" id="b-entry">—</div><div class="ms">suporte GEX</div></div>
   <div class="panel mstat"><div class="ml">STOP LOSS</div><div class="mv neg" id="b-stop">—</div><div class="ms">Gamma Flip</div></div>
-  <div class="panel mstat"><div class="ml">ALVO TP1</div><div class="mv" style="color:var(--blue)" id="b-tp1">—</div><div class="ms">R:R configurável</div></div>
+  <div class="panel mstat"><div class="ml">ALVO TP1</div><div class="mv" style="color:var(--blue)" id="b-tp1">—</div><div class="ms">R:R calculado</div></div>
   <div class="panel mstat"><div class="ml">ALVO TP2</div><div class="mv" style="color:#a78bfa" id="b-tp2">—</div><div class="ms">Call Wall</div></div>
 </div>
 
+<!-- CORRELAÇÕES + CENÁRIOS + OVERRIDES -->
 <div class="g3">
   <div class="panel">
     <div class="ptitle">CORRELAÇÕES XAU</div>
@@ -313,7 +419,7 @@ select.inp{cursor:pointer;appearance:none;padding-right:22px;background-image:ur
     <div id="scen-wrap"><div style="font-size:11px;color:var(--muted)">Aguardando...</div></div>
   </div>
   <div class="panel">
-    <div class="ptitle">OVERRIDES MANUAIS <span class="psrc">COT · ETF · GEX</span></div>
+    <div class="ptitle">OVERRIDES MANUAIS</div>
     <div class="manual-row"><span class="mlbl">COT Net Long</span><input class="inp inp-sm" type="number" id="m-cot" value="160145" step="500" onchange="compute()"></div>
     <div class="manual-row"><span class="mlbl">COT Δ semanal</span><input class="inp inp-sm" type="number" id="m-cotchg" value="-2000" step="100" onchange="compute()"></div>
     <div class="manual-row"><span class="mlbl">ETF Flows ($Mn)</span><input class="inp inp-sm" type="number" id="m-etf" value="5300" step="100" onchange="compute()"></div>
@@ -329,104 +435,268 @@ select.inp{cursor:pointer;appearance:none;padding-right:22px;background-image:ur
     <div style="font-size:9px;color:var(--muted);margin-bottom:6px">LOG DE SINAIS</div>
     <table class="logt">
       <thead><tr><th>HORA</th><th>SINAL</th><th>SCORE</th><th>PREÇO</th></tr></thead>
-      <tbody id="log-body"><tr><td colspan="4" style="color:var(--dim);padding:6px">Aguardando fetch...</td></tr></tbody>
+      <tbody id="log-body"><tr><td colspan="4" style="color:var(--dim);padding:6px">Aguardando...</td></tr></tbody>
     </table>
     <button class="compute-btn" onclick="compute()">▶ RECALCULAR SINAL</button>
   </div>
 </div>
 
 <div class="ftr">
-  <span>XAU TERMINAL v6.0 · SMART MONEY · NODE.JS SERVER</span>
-  <span>Fontes: Yahoo Finance (direto) · FRED St. Louis Fed · CFTC · WGC</span>
-  <span id="last-update">Última atualização: —</span>
+  <span>XAU TERMINAL v8.0 · 6 PILARES + MFC 28 PARES · MATAF METHODOLOGY</span>
+  <span>Fontes: Yahoo Finance · FRED · CFTC · WGC · CME</span>
+  <span id="last-update">—</span>
 </div>
 
 <script>
-const S={xau:null,dxy:null,wti:null,eur:null,ust:null,tips:null,fed:6600};
-let logEntries=[],countdownSec=0;
+// ═══════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════
+const S = { xau:null,dxy:null,wti:null,eur:null,ust:null,tips:null,fed:6600,mfc:null };
+let logEntries=[], countdownSec=0;
 
-function tick(){
-  const n=new Date();
-  document.getElementById('clock').textContent=[n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':')+' UTC';
-  if(countdownSec>0){countdownSec--;document.getElementById('countdown').textContent='Auto-refresh: '+countdownSec+'s';if(countdownSec===0)fetchAll();}
+const CURRENCY_COLORS = {
+  USD:'#60a5fa', EUR:'#34d399', GBP:'#a78bfa',
+  JPY:'#f87171', CHF:'#fbbf24', CAD:'#f97316',
+  AUD:'#22d3ee', NZD:'#e879f9'
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// CLOCK
+// ═══════════════════════════════════════════════════════════════════
+function tick() {
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    [n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':') + ' UTC';
+  if (countdownSec > 0) {
+    countdownSec--;
+    document.getElementById('countdown').textContent = 'Auto: ' + countdownSec + 's';
+    if (countdownSec === 0) fetchAll();
+  }
 }
-setInterval(tick,1000);
+setInterval(tick, 1000);
 
-function chipState(id,s){const el=document.getElementById(id);if(el)el.className='schip '+(s||'');}
-function fmt(v,d){return typeof v==='number'?v.toLocaleString('pt-PT',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';}
+function chipState(id, s) { const el=document.getElementById(id); if(el) el.className='schip '+(id==='chip-mfc'?'mfc ':'')+s; }
+function fmt(v,d) { return typeof v==='number'?v.toLocaleString('pt-PT',{minimumFractionDigits:d,maximumFractionDigits:d}):'—'; }
 
-async function fetchAll(){
-  const btn=document.getElementById('fetch-btn');
-  const ficon=document.getElementById('ficon');
-  const status=document.getElementById('fetch-status');
-  btn.disabled=true;ficon.classList.add('spin');
-  status.innerHTML='<b>Buscando dados via servidor...</b> acesso direto ao Yahoo Finance + FRED';
-  ['xau','dxy','wti','eur','ust','tips','fed'].forEach(k=>chipState('chip-'+k,'loading'));
+// ═══════════════════════════════════════════════════════════════════
+// FETCH ALL
+// ═══════════════════════════════════════════════════════════════════
+async function fetchAll() {
+  const btn = document.getElementById('fetch-btn');
+  const ficon = document.getElementById('ficon');
+  const status = document.getElementById('fetch-status');
+  btn.disabled = true;
+  ficon.classList.add('spin');
+  status.innerHTML = '<b>Buscando dados + MFC 28 pares...</b>';
+  ['xau','dxy','wti','eur','ust','tips','fed'].forEach(k => chipState('chip-'+k,'loading'));
+  chipState('chip-mfc','loading');
 
-  try{
-    const r=await fetch('/api/all',{signal:AbortSignal.timeout(20000)});
-    if(!r.ok)throw new Error('Server HTTP '+r.status);
-    const d=await r.json();
+  try {
+    const r = await fetch('/api/all', { signal: AbortSignal.timeout(25000) });
+    if (!r.ok) throw new Error('Server HTTP ' + r.status);
+    const d = await r.json();
 
-    let ok=0,fail=0;
-    const process=(key,data,type)=>{
-      if(!data||data.error){chipState('chip-'+key,'err');fail++;return;}
-      if(type==='yf'){
-        const {price,chgPct}=data;
-        const isPos=chgPct>=0;
-        const col=isPos?'var(--green)':'var(--red)';
-        const chgTxt=(isPos?'▲ +':'▼ ')+Math.abs(chgPct).toFixed(2)+'%';
-        const prefix=key==='xau'||key==='wti'?'$':'';
-        const dec=key==='eur'?4:key==='dxy'?2:0;
-        const el=document.getElementById('v-'+key);
-        if(el)el.innerHTML=`<span style="color:${col}" class="pulse">${prefix}${fmt(price,dec)}</span><span style="font-size:10px;color:${col};margin-left:4px">${chgTxt}</span>`;
-        const ageEl=document.getElementById('age-'+key);if(ageEl)ageEl.textContent='RT';
-        ['tk-'+key,'tk-'+key+'2'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=prefix+fmt(price,dec);});
-        const tc=document.getElementById('tk-'+key+'-c');if(tc){tc.textContent=chgTxt;tc.className=isPos?'pos':'neg';}
-        if(key==='xau')S.xau=price;else if(key==='dxy')S.dxy=price;else if(key==='wti')S.wti=price;else if(key==='eur')S.eur=price;
-      }else{
-        const val=data.value;
-        let col='var(--amber)',display;
-        if(key==='tips'){col=val>1.5?'var(--red)':val<0.5?'var(--green)':'var(--amber)';display=`<span style="color:${col}" class="pulse">${fmt(val,2)}%</span>`;}
-        else if(key==='ust'){col=val>4.2?'var(--red)':'var(--amber)';display=`<span style="color:${col}" class="pulse">${fmt(val,2)}%</span>`;}
-        else if(key==='fed'){S.fed=val/1000;display=`<span style="color:var(--amber)" class="pulse">$${fmt(val/1000,1)}B</span>`;}
-        else display=`<span class="pulse">${fmt(val,2)}</span>`;
-        const el=document.getElementById('v-'+key);if(el)el.innerHTML=display;
-        const ageEl=document.getElementById('age-'+key);if(ageEl)ageEl.textContent='FRED';
-        const disp=key==='fed'?'$'+fmt(val/1000,1)+'B':fmt(val,2)+'%';
-        ['tk-'+key,'tk-'+key+'2'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=disp;});
-        if(key==='tips')S.tips=val;else if(key==='ust')S.ust=val;
-      }
-      chipState('chip-'+key,'ok');ok++;
+    let ok=0, fail=0;
+
+    const procYF = (key, data) => {
+      if (!data || data.error) { chipState('chip-'+key,'err'); fail++; return; }
+      const { price, chgPct } = data;
+      const isPos = chgPct >= 0;
+      const col = isPos ? 'var(--green)' : 'var(--red)';
+      const chgTxt = (isPos?'▲ +':'▼ ') + Math.abs(chgPct).toFixed(2)+'%';
+      const prefix = key==='xau'||key==='wti' ? '$' : '';
+      const dec = key==='eur'?4:key==='dxy'?2:0;
+      const el = document.getElementById('v-'+key);
+      if (el) el.innerHTML = `<span style="color:${col}" class="pulse">${prefix}${fmt(price,dec)}</span><span style="font-size:10px;color:${col};margin-left:4px">${chgTxt}</span>`;
+      const ae = document.getElementById('age-'+key); if(ae) ae.textContent='RT';
+      ['tk-'+key,'tk-'+key+'2'].forEach(id => { const e=document.getElementById(id); if(e) e.textContent=prefix+fmt(price,dec); });
+      const tc = document.getElementById('tk-'+key+'-c'); if(tc){tc.textContent=chgTxt;tc.className=isPos?'pos':'neg';}
+      if (key==='xau') S.xau=price; else if(key==='dxy') S.dxy=price;
+      else if(key==='wti') S.wti=price; else if(key==='eur') S.eur=price;
+      chipState('chip-'+key,'ok'); ok++;
     };
 
-    process('xau',d.xau,'yf');process('dxy',d.dxy,'yf');
-    process('wti',d.wti,'yf');process('eur',d.eur,'yf');
-    process('ust',d.ust,'fred');process('tips',d.tips,'fred');process('fed',d.fed,'fred');
+    const procFRED = (key, data) => {
+      if (!data || data.error) { chipState('chip-'+key,'err'); fail++; return; }
+      const val = data.value;
+      let col='var(--amber)', display;
+      if (key==='tips') { col=val>1.5?'var(--red)':val<0.5?'var(--green)':'var(--amber)'; S.tips=val; display=`<span style="color:${col}" class="pulse">${fmt(val,2)}%</span>`; }
+      else if (key==='ust') { col=val>4.2?'var(--red)':'var(--amber)'; S.ust=val; display=`<span style="color:${col}" class="pulse">${fmt(val,2)}%</span>`; }
+      else if (key==='fed') { S.fed=val/1000; display=`<span style="color:var(--amber)" class="pulse">$${fmt(val/1000,1)}B</span>`; }
+      else display=`<span class="pulse">${fmt(val,2)}</span>`;
+      const el=document.getElementById('v-'+key); if(el) el.innerHTML=display;
+      const ae=document.getElementById('age-'+key); if(ae) ae.textContent='FRED';
+      const disp=key==='fed'?'$'+fmt(val/1000,1)+'B':fmt(val,2)+'%';
+      ['tk-'+key,'tk-'+key+'2'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=disp;});
+      chipState('chip-'+key,'ok'); ok++;
+    };
 
-    const n=new Date();
-    const ts=[n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
-    document.getElementById('last-update').textContent='Última atualização: '+ts+' UTC · servidor direto';
-    status.innerHTML=`<b style="color:var(--green)">✓ ${ok} fontes carregadas</b>${fail>0?` · <span style="color:var(--red)">${fail} falhas</span>`:''} · próxima atualização em 5 min`;
-    countdownSec=300;
-  }catch(e){
-    status.innerHTML=`<b style="color:var(--red)">Erro do servidor: ${e.message}</b> — tente novamente`;
+    procYF('xau', d.xau); procYF('dxy', d.dxy); procYF('wti', d.wti); procYF('eur', d.eur);
+    procFRED('ust', d.ust); procFRED('tips', d.tips); procFRED('fed', d.fed);
+
+    // MFC
+    if (d.mfc && !d.mfc.error && d.mfc.ranked) {
+      S.mfc = d.mfc;
+      renderMFC(d.mfc);
+      chipState('chip-mfc','ok');
+      ok++;
+    } else {
+      chipState('chip-mfc','err');
+      document.getElementById('mfc-bars').innerHTML = '<div style="color:var(--red);font-size:11px;padding:10px 0">MFC falhou — verifique servidor</div>';
+      fail++;
+    }
+
+    const n = new Date();
+    const ts = [n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
+    document.getElementById('last-update').textContent = 'Última atualização: ' + ts + ' UTC';
+    status.innerHTML = `<b style="color:var(--green)">✓ ${ok} fontes OK</b>${fail>0?` · <span style="color:var(--red)">${fail} falhas</span>`:''} · MFC: ${d.mfc?.pairsLoaded||0}/28 pares · próximo em 5min`;
+    countdownSec = 300;
+  } catch(e) {
+    status.innerHTML = `<b style="color:var(--red)">Erro: ${e.message}</b>`;
     ['xau','dxy','wti','eur','ust','tips','fed'].forEach(k=>chipState('chip-'+k,'err'));
+    chipState('chip-mfc','err');
   }
 
-  btn.disabled=false;ficon.classList.remove('spin');
+  btn.disabled = false;
+  ficon.classList.remove('spin');
   compute();
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// RENDER MFC
+// ═══════════════════════════════════════════════════════════════════
+function renderMFC(mfc) {
+  const { ranked, pairs, usdStrength, usdRank, pairsLoaded, ts } = mfc;
+
+  // Update header info
+  document.getElementById('mfc-ts').textContent = ts ? ts.substring(11,16)+' UTC' : '';
+  document.getElementById('mfc-pairs-loaded').textContent = (pairsLoaded||0)+'/28';
+
+  // Ticker updates
+  const top = ranked[0], bot = ranked[ranked.length-1];
+  ['tk-mfc-top','tk-mfc-top2'].forEach(id => { const e=document.getElementById(id); if(e) e.textContent=top.currency; });
+  const tbe = document.getElementById('tk-mfc-bot'); if(tbe) tbe.textContent=bot.currency;
+  const use = document.getElementById('tk-usd-str'); if(use) use.textContent=usdStrength.toFixed(0);
+  const use2 = document.getElementById('tk-usd-str2'); if(use2) use2.textContent=usdStrength.toFixed(0);
+  const ure = document.getElementById('tk-usd-rank'); if(ure){ure.textContent=`#${usdRank}/8`;ure.className=usdRank<=2?'pos':usdRank>=7?'neg':'neu';}
+
+  // BAR CHART
+  const maxStr = Math.max(...ranked.map(r=>r.strength));
+  const barsEl = document.getElementById('mfc-bars');
+  barsEl.innerHTML = ranked.map((r, i) => {
+    const col = CURRENCY_COLORS[r.currency] || '#888';
+    const barW = maxStr > 0 ? (r.strength/100*100).toFixed(1) : 0;
+    const rawSign = r.raw >= 0 ? '+' : '';
+    const strength50 = Math.abs(r.strength - 50);
+    const label = r.strength > 55 ? 'FORTE' : r.strength < 45 ? 'FRACA' : 'NEUTRO';
+    const labelCol = r.strength > 55 ? 'var(--green)' : r.strength < 45 ? 'var(--red)' : 'var(--amber)';
+    return `
+    <div class="mfc-bar-row" style="animation-delay:${i*0.05}s">
+      <div class="mfc-rank">${i+1}</div>
+      <div class="mfc-currency" style="color:${col}">${r.currency}</div>
+      <div class="mfc-bar-wrap">
+        <div class="mfc-bar-fill" style="width:${barW}%;background:${col};opacity:0.75"></div>
+      </div>
+      <div class="mfc-pct" style="color:${col}">${r.strength.toFixed(1)}</div>
+      <div class="mfc-raw">${rawSign}${(r.raw*100).toFixed(2)}bp</div>
+      <div style="font-size:9px;font-weight:600;color:${labelCol};width:42px;text-align:right">${label}</div>
+    </div>`;
+  }).join('');
+
+  // SIGNALS
+  const strongest = ranked[0];
+  const weakest   = ranked[ranked.length-1];
+  const second    = ranked[1];
+  const sweak2    = ranked[ranked.length-2];
+
+  // Best trade: pair strongest vs weakest
+  const pairBuy  = strongest.currency + '/' + weakest.currency;
+  const pairSell = weakest.currency + '/' + strongest.currency;
+  const usdPair  = ranked.find(r=>r.currency==='USD');
+  const eurPair  = ranked.find(r=>r.currency==='EUR');
+  const xauSignal = usdStrength > 60 ? 'USD FORTE → pressão no XAU' : usdStrength < 40 ? 'USD FRACO → suporte ao XAU' : 'USD NEUTRO → XAU sem viés MFC';
+  const xauCol   = usdStrength > 60 ? 'var(--red)' : usdStrength < 40 ? 'var(--green)' : 'var(--amber)';
+
+  document.getElementById('mfc-signals').innerHTML = `
+    <div class="mfc-signal-row">
+      <div class="mfc-sig-card" style="border-color:var(--green)">
+        <div class="sc-lbl">COMPRAR</div>
+        <div class="sc-pair" style="color:var(--green)">${strongest.currency}/${weakest.currency}</div>
+        <div class="sc-why">${strongest.currency} mais forte (${strongest.strength.toFixed(0)}) vs. ${weakest.currency} mais fraca (${weakest.strength.toFixed(0)})</div>
+      </div>
+      <div class="mfc-sig-card" style="border-color:var(--red)">
+        <div class="sc-lbl">VENDER</div>
+        <div class="sc-pair" style="color:var(--red)">${weakest.currency}/${strongest.currency}</div>
+        <div class="sc-why">Máxima divergência de força entre ${strongest.currency} e ${weakest.currency}</div>
+      </div>
+    </div>
+    <div class="mfc-signal-row" style="margin-top:6px">
+      <div class="mfc-sig-card" style="border-color:var(--blue)">
+        <div class="sc-lbl">2ª OPÇÃO</div>
+        <div class="sc-pair" style="color:var(--blue)">${second.currency}/${sweak2.currency}</div>
+        <div class="sc-why">${second.currency} (${second.strength.toFixed(0)}) vs. ${sweak2.currency} (${sweak2.strength.toFixed(0)})</div>
+      </div>
+      <div class="mfc-sig-card" style="border-color:${xauCol}">
+        <div class="sc-lbl">IMPACTO XAU</div>
+        <div class="sc-pair" style="color:${xauCol};font-size:11px">${xauSignal}</div>
+        <div class="sc-why">USD rank #${usdRank}/8 · força ${usdStrength.toFixed(0)}/100</div>
+      </div>
+    </div>`;
+
+  // XAU analysis
+  const xauAnalysis = usdStrength > 65
+    ? `<span style="color:var(--red)">⚠ USD muito forte (${usdStrength.toFixed(0)}/100, rank #${usdRank}).</span> MFC confirma pressão baixista no ouro. Correlação DXY-XAU ativa (-0.78). Aguardar enfraquecimento do USD antes de entrar long.`
+    : usdStrength < 35
+    ? `<span style="color:var(--green)">✓ USD fraco (${usdStrength.toFixed(0)}/100, rank #${usdRank}).</span> MFC favorável ao ouro. Capital migra para ativos alternativos. Confirma sinal de compra se TIPS e COT alinhados.`
+    : `<span style="color:var(--amber)">→ USD neutro (${usdStrength.toFixed(0)}/100, rank #${usdRank}).</span> MFC sem viés claro para XAU. Aguardar confirmação de outros pilares antes de entrar.`;
+  document.getElementById('mfc-xau-analysis').innerHTML = xauAnalysis;
+
+  // HEATMAP top 12 pairs by absolute move
+  const topPairs = (pairs||[])
+    .filter(p => p.chgPct !== undefined)
+    .sort((a,b) => Math.abs(b.chgPct) - Math.abs(a.chgPct))
+    .slice(0,12);
+
+  document.getElementById('mfc-heatmap').innerHTML = `<div class="heat-grid">${
+    topPairs.map(p => {
+      const isPos = p.chgPct >= 0;
+      const intensity = Math.min(Math.abs(p.chgPct) / 0.5, 1);
+      const bg = isPos
+        ? `rgba(25,230,160,${0.08 + intensity*0.2})`
+        : `rgba(255,77,109,${0.08 + intensity*0.2})`;
+      const col = isPos ? 'var(--green)' : 'var(--red)';
+      const name = p.ticker.replace('=X','').replace('%3D','');
+      return `<div class="heat-cell" style="background:${bg}">
+        <div class="heat-ticker">${name.substring(0,6)}</div>
+        <div class="heat-val" style="color:${col}">${isPos?'+':''}${p.chgPct.toFixed(2)}%</div>
+      </div>`;
+    }).join('')
+  }</div>`;
+
+  // P6 display
+  const p6Color = usdStrength > 60 ? 'var(--red)' : usdStrength < 40 ? 'var(--green)' : 'var(--amber)';
+  document.getElementById('p6-display').innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <div style="font-size:20px;font-weight:600;color:${p6Color}">${usdStrength.toFixed(0)}</div>
+      <div>
+        <div style="font-size:9px;color:var(--muted)">USD FORÇA / 100</div>
+        <div style="font-size:10px;color:${p6Color}">Rank #${usdRank} de 8</div>
+      </div>
+    </div>
+    <div style="height:5px;background:var(--bg3);border-radius:2px;overflow:hidden">
+      <div style="width:${usdStrength}%;height:100%;background:${p6Color};border-radius:2px;transition:width .8s"></div>
+    </div>
+    <div style="font-size:9px;color:var(--dim);margin-top:4px">USD forte = bearish XAU · USD fraco = bullish XAU</div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// GEX CHART
+// ═══════════════════════════════════════════════════════════════════
 const GEX=[
-  {px:'$5.500',c:90,p:5,lbl:'',wall:''},
-  {px:'$5.400',c:70,p:8,lbl:'',wall:''},
-  {px:'$5.300',c:55,p:25,lbl:'',wall:''},
-  {px:'$5.200',c:185,p:40,lbl:'★ CALL WALL',wall:'call'},
-  {px:'$5.100',c:95,p:55,lbl:'Flip zone',wall:'flip'},
-  {px:'$5.000',c:45,p:110,lbl:'★ PUT WALL',wall:'put'},
-  {px:'$4.950',c:25,p:95,lbl:'',wall:''},
-  {px:'$4.800',c:10,p:140,lbl:'★ PUT crítico',wall:'put2'},
+  {px:'$5.500',c:90,p:5,lbl:'',wall:''},{px:'$5.400',c:70,p:8,lbl:'',wall:''},
+  {px:'$5.300',c:55,p:25,lbl:'',wall:''},{px:'$5.200',c:185,p:40,lbl:'★ CALL WALL',wall:'call'},
+  {px:'$5.100',c:95,p:55,lbl:'Flip zone',wall:'flip'},{px:'$5.000',c:45,p:110,lbl:'★ PUT WALL',wall:'put'},
+  {px:'$4.950',c:25,p:95,lbl:'',wall:''},{px:'$4.800',c:10,p:140,lbl:'★ PUT crítico',wall:'put2'},
   {px:'$4.600',c:5,p:75,lbl:'',wall:''},
 ];
 function renderGEX(){
@@ -436,7 +706,7 @@ function renderGEX(){
     const isSpot=(d.px==='$5.000'&&spot>=4950&&spot<=5050)||(d.px==='$5.100'&&spot>5050&&spot<=5150);
     const pc=d.wall==='call'?'var(--green)':d.wall==='put'||d.wall==='put2'?'var(--red)':d.wall==='flip'?'var(--amber)':'var(--muted)';
     const lc=d.wall==='call'?'var(--green)':d.wall==='put'||d.wall==='put2'?'var(--red)':d.wall==='flip'?'var(--amber)':'var(--dim)';
-    return `<div class="gex-row" style="${d.wall==='flip'?'background:rgba(245,166,35,.04);border-radius:3px;':''}">
+    return `<div class="gex-row" style="${d.wall==='flip'?'background:rgba(245,166,35,.04);border-radius:3px':''}">
       <div class="gex-px${isSpot?' active':''}" style="color:${pc}">${d.px}${isSpot?' ◄':''}</div>
       <div class="gex-track"><div class="gex-mid"></div><div class="gex-p" style="width:${pw}%"></div><div class="gex-c" style="width:${cw}%"></div></div>
       <div class="gex-lbl" style="color:${lc}">${d.lbl}</div></div>`;
@@ -444,27 +714,42 @@ function renderGEX(){
 }
 
 function renderCorr(){
-  const items=[{n:'DXY Index',c:-0.78},{n:'TIPS 10Y',c:-0.82},{n:'UST 10Y',c:-0.61},{n:'ETF GLD',c:+0.74},{n:'WTI',c:+0.42},{n:'COT Net Long',c:+0.69},{n:'FED Balance',c:+0.85},{n:'EUR/USD',c:+0.31}];
+  const items=[{n:'DXY Index',c:-0.78},{n:'TIPS 10Y',c:-0.82},{n:'UST 10Y',c:-0.61},{n:'ETF GLD',c:+0.74},{n:'WTI',c:+0.42},{n:'COT Net Long',c:+0.69},{n:'FED Balance',c:+0.85},{n:'EUR/USD',c:+0.31},{n:'USD MFC Strength',c:-0.76}];
   document.getElementById('corr-wrap').innerHTML=items.map(it=>{
     const pct=Math.abs(it.c)*100,col=it.c>0?'var(--green)':'var(--red)',bg=it.c>0?'rgba(25,230,160,.35)':'rgba(255,77,109,.35)';
     return `<div class="corr-row"><div class="corr-n">${it.n}</div><div class="corr-track"><div class="corr-f" style="width:${pct}%;background:${bg}"></div></div><div class="corr-v" style="color:${col}">${(it.c>0?'+':'')}${it.c.toFixed(2)}</div></div>`;
   }).join('');
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// COMPUTE — 6 PILARES (P6 = USD MFC strength)
+// ═══════════════════════════════════════════════════════════════════
 function compute(){
-  const spot=S.xau||5019,ust=S.ust||4.27,tips=S.tips||1.88,fed=S.fed||6600;
+  const spot=S.xau||5019, ust=S.ust||4.27, tips=S.tips||1.88, fed=S.fed||6600;
   const cot=parseInt(document.getElementById('m-cot').value)||160145;
   const cotChg=parseInt(document.getElementById('m-cotchg').value)||-2000;
   const etf=parseFloat(document.getElementById('m-etf').value)||5300;
   const gex=document.getElementById('m-gex').value;
   const rr=parseFloat(document.getElementById('m-rr').value)||2.0;
+  const usdStr = S.mfc ? S.mfc.usdStrength : 50; // 0-100
 
-  let p1=10;if(cotChg>2000&&cot>150000)p1=19;else if(cotChg>0&&cot>120000)p1=15;else if(cotChg<-3000)p1=3;else if(cotChg<-1000)p1=7;if(cot>210000)p1=Math.max(p1-4,2);
+  // Scores (0-20 each)
+  let p1=10;
+  if(cotChg>2000&&cot>150000)p1=19;else if(cotChg>0&&cot>120000)p1=15;
+  else if(cotChg<-3000)p1=3;else if(cotChg<-1000)p1=7;
+  if(cot>210000)p1=Math.max(p1-4,2);
   const p2=etf>4000?18:etf>1500?14:etf<0?2:etf<500?6:10;
   const p3=tips<0?19:tips<0.5?17:tips<1.0?14:tips<1.5?11:tips<2.0?7:tips<2.5?4:2;
   const p4=fed>8500?18:fed>7500?15:fed>7000?12:fed<6000?5:10;
   const p5=gex==='long'?17:gex==='flip'?10:4;
-  const score=Math.min(100,Math.max(0,Math.round((p3*.25+p1*.20+p2*.20+p5*.20+p4*.15)*5)));
+  // P6: USD MFC — INVERSO (USD forte = bearish XAU = score baixo)
+  const p6=usdStr<30?18:usdStr<40?15:usdStr<50?12:usdStr<60?9:usdStr<70?6:3;
+
+  // Weighted: TIPS 22%, COT 18%, ETF 18%, GEX 18%, FED 14%, MFC USD 10%
+  const score=Math.min(100,Math.max(0,Math.round(
+    (p3*0.22)+(p1*0.18)+(p2*0.18)+(p5*0.18)+(p4*0.14)+(p6*0.10))*5
+  ));
+
   const diverge=(gex==='long'||(gex==='flip'&&spot>5050))&&(tips>1.5||cotChg<-1500);
   let signal,conf;
   if(diverge){signal='AGUARDAR';conf=Math.min(94,Math.round(40+score/10));}
@@ -483,6 +768,7 @@ function compute(){
   document.getElementById('sig-conf').textContent=conf+'%';
   document.getElementById('sig-div').textContent=diverge?'GEX vs. TIPS/COT':score>60?'BULLISH':'BEARISH/MISTO';
   document.getElementById('sig-regime').textContent=gex==='long'?'LONG GAMMA':gex==='flip'?'GAMMA FLIP':'SHORT GAMMA';
+  document.getElementById('sig-usd').textContent=S.mfc?`${usdStr.toFixed(0)}/100 #${S.mfc.usdRank}`:'—';
   document.getElementById('sl-entry').textContent=entry?'$'+entry.toLocaleString('pt-PT'):'—';
   document.getElementById('sl-stop').textContent=stop?'$'+stop.toLocaleString('pt-PT'):'—';
   document.getElementById('sl-tp').textContent=tp1?'$'+tp1.toLocaleString('pt-PT'):'—';
@@ -496,28 +782,41 @@ function compute(){
   document.getElementById('b-tp1').textContent=tp1?'$'+tp1.toLocaleString('pt-PT'):'—';
   document.getElementById('b-tp2').textContent=tp2?'$'+tp2.toLocaleString('pt-PT'):'—';
 
+  // 6 pillars
   const sigOf=s=>s>=14?['pd-g','ps-b','BULL']:s<=7?['pd-r','ps-s','BEAR']:['pd-a','ps-w','NEU'];
   const p5s=gex==='long'?['pd-g','ps-b','BULL']:gex==='flip'?['pd-a','ps-w','FLIP']:['pd-r','ps-s','BEAR'];
+  const p6s=p6>=14?['pd-g','ps-b','BULL']:p6<=7?['pd-r','ps-s','BEAR']:['pd-a','ps-w','NEU'];
   const vc=cls=>cls==='pd-g'?'var(--green)':cls==='pd-r'?'var(--red)':'var(--amber)';
-  const rows=[{n:'P1 · COT',v:cot.toLocaleString('pt-PT'),s:sigOf(p1)},{n:'P2 · ETF',v:(etf>=0?'+':'')+etf.toLocaleString('pt-PT')+'Mn',s:sigOf(p2)},{n:'P3 · TIPS',v:tips.toFixed(2)+'%',s:sigOf(p3)},{n:'P4 · FED',v:'$'+fed.toLocaleString('pt-PT',{maximumFractionDigits:0})+'B',s:sigOf(p4)},{n:'P5 · GEX',v:gex==='long'?'Long Gamma':gex==='flip'?'Flip Zone':'Short Gamma',s:p5s}];
-  document.getElementById('pillar-list').innerHTML=rows.map(r=>`<div class="pr"><div class="pdot ${r.s[0]}"></div><div class="pname">${r.n}</div><div class="pval" style="color:${vc(r.s[0])}">${r.v}</div><div class="psig ${r.s[1]}">${r.s[2]}</div></div>`).join('');
+  const rows=[
+    {n:'P1 · COT',v:cot.toLocaleString('pt-PT'),s:sigOf(p1)},
+    {n:'P2 · ETF Flows',v:(etf>=0?'+':'')+etf.toLocaleString('pt-PT')+'Mn',s:sigOf(p2)},
+    {n:'P3 · TIPS',v:tips.toFixed(2)+'%',s:sigOf(p3)},
+    {n:'P4 · FED',v:'$'+fed.toLocaleString('pt-PT',{maximumFractionDigits:0})+'B',s:sigOf(p4)},
+    {n:'P5 · GEX',v:gex==='long'?'Long Gamma':gex==='flip'?'Flip Zone':'Short Gamma',s:p5s},
+    {n:'P6 · USD MFC',v:S.mfc?`${usdStr.toFixed(0)}/100 #${S.mfc.usdRank}`:'aguardando',s:p6s},
+  ];
+  document.getElementById('pillar-list').innerHTML=rows.map(r=>`
+    <div class="pr"><div class="pdot ${r.s[0]}"></div><div class="pname">${r.n}</div><div class="pval" style="color:${vc(r.s[0])}">${r.v}</div><div class="psig ${r.s[1]}">${r.s[2]}</div></div>`).join('');
 
+  // Alerts
   const al=[];
   if(diverge)al.push({t:'crit',title:'⚠ DIVERGÊNCIA CRÍTICA',body:`GEX sinaliza compra mas TIPS(${tips.toFixed(2)}%) e COT(Δ${cotChg.toLocaleString()}) contradizem. Fakeout provável.`});
+  if(S.mfc&&usdStr>65)al.push({t:'mfc-alert',title:`◈ MFC: USD FORTE (${usdStr.toFixed(0)}/100 · #${S.mfc.usdRank})`,body:`USD é ${S.mfc.usdRank===1?'a moeda mais forte':'das mais fortes'} nos 28 pares. Pressão estrutural sobre XAU via correlação DXY (-0.78). Confirma viés baixista.`});
+  if(S.mfc&&usdStr<35)al.push({t:'good',title:`◎ MFC: USD FRACO (${usdStr.toFixed(0)}/100 · #${S.mfc.usdRank})`,body:`USD nas posições mais fracas. Capital a migrar para ativos alternativos incluindo ouro. MFC confirma viés bullish.`});
   if(gex==='short')al.push({t:'warn',title:'◈ SHORT GAMMA — VOL AMPLIFICADA',body:`Stop obrigatório: $${(spot-sd).toLocaleString('pt-PT')}.`});
-  if(tips>1.8)al.push({t:'crit',title:`⚠ TIPS ${tips.toFixed(2)}% — HOSTIL`,body:`Custo de oportunidade crescente. Correlação inversa ativa (-0.82).`});
+  if(tips>1.8)al.push({t:'crit',title:`⚠ TIPS ${tips.toFixed(2)}% — HOSTIL`,body:`Custo de oportunidade crescente. Correlação inversa -0.82 activa.`});
   else if(tips<1.0)al.push({t:'good',title:'◎ TIPS FAVORÁVEL',body:`Real yield abaixo de 1% — positivo para XAU.`});
-  if(cotChg>2000)al.push({t:'good',title:'◎ COT — ACUMULAÇÃO',body:`+${cotChg.toLocaleString()} contratos. Smart Money comprando.`});
-  al.push({t:'info',title:'◎ FOMC 17–19 MAR',body:'Dot Plot = catalisador definitivo. Stop ajustado obrigatório pré-evento.'});
+  if(cotChg>2000)al.push({t:'good',title:'◎ COT — ACUMULAÇÃO',body:`+${cotChg.toLocaleString()} contratos net long. Smart Money comprando.`});
+  al.push({t:'info',title:'◎ FOMC 17–19 MAR',body:'Dot Plot = catalisador. Stop ajustado obrigatório pré-evento.'});
   document.getElementById('alerts-box').innerHTML=al.map(a=>`<div class="alert ${a.t}"><div class="at">${a.title}</div>${a.body}</div>`).join('');
 
   const rb=document.getElementById('regime-badge');rb.className='rbadge '+(gex==='long'?'rb-long':gex==='flip'?'rb-flip':'rb-short');rb.textContent=gex==='long'?'LONG GAMMA':gex==='flip'?'GAMMA FLIP':'SHORT GAMMA';
   renderGEX();
 
   document.getElementById('scen-wrap').innerHTML=[
-    {l:signal==='COMPRAR'?'BASE ALTISTA':'ALTISTA',p:signal==='COMPRAR'?55:15,col:'var(--green)',bg:'rgba(25,230,160,.06)',bc:'rgba(25,230,160,.4)',b:`Recaptura $${(spot+80).toLocaleString('pt-PT')}. Alvo: $${(spot+180).toLocaleString('pt-PT')}.`},
-    {l:signal==='VENDER'?'BASE BAIXISTA':'BAIXISTA',p:signal==='VENDER'?55:30,col:'var(--red)',bg:'rgba(255,77,109,.06)',bc:'rgba(255,77,109,.4)',b:`Cascata Short Gamma → $${(spot-220).toLocaleString('pt-PT')}.`},
-    {l:'LATERALIZAÇÃO',p:Math.max(5,100-(signal==='COMPRAR'?55:signal==='VENDER'?55:36)-30),col:'var(--amber)',bg:'rgba(245,166,35,.06)',bc:'rgba(245,166,35,.4)',b:`Range $${(spot-60).toLocaleString('pt-PT')}–$${(spot+100).toLocaleString('pt-PT')}. Vol comprimida.`},
+    {l:signal==='COMPRAR'?'BASE ALTISTA':'ALTISTA',p:signal==='COMPRAR'?55:15,col:'var(--green)',bg:'rgba(25,230,160,.06)',bc:'rgba(25,230,160,.4)',b:`Recaptura $${(spot+80).toLocaleString('pt-PT')}. Alvo: $${(spot+180).toLocaleString('pt-PT')}. Exige: USD enfraquecer + FOMC dovish.`},
+    {l:signal==='VENDER'?'BASE BAIXISTA':'BAIXISTA',p:signal==='VENDER'?55:30,col:'var(--red)',bg:'rgba(255,77,109,.06)',bc:'rgba(255,77,109,.4)',b:`Cascata Short Gamma → $${(spot-220).toLocaleString('pt-PT')}. USD forte + FOMC hawkish.`},
+    {l:'LATERALIZAÇÃO',p:Math.max(5,100-(signal==='COMPRAR'?55:signal==='VENDER'?55:36)-30),col:'var(--amber)',bg:'rgba(245,166,35,.06)',bc:'rgba(245,166,35,.4)',b:`Range $${(spot-60).toLocaleString('pt-PT')}–$${(spot+100).toLocaleString('pt-PT')}. Vol comprimida. Aguardar catalisador.`},
   ].map(s=>`<div class="scen" style="background:${s.bg};border-color:${s.bc}"><div class="scen-t" style="color:${s.col}">${s.l}<span>${s.p}%</span></div><div class="scen-b">${s.b}</div><div class="scen-prog" style="background:${s.col};width:${s.p}%"></div></div>`).join('');
 
   const n=new Date();
@@ -528,7 +827,8 @@ function compute(){
   document.getElementById('log-body').innerHTML=logEntries.map(e=>`<tr><td style="color:var(--muted)">${e.ts}</td><td style="color:${e.color};font-weight:600">${e.signal}</td><td style="color:${e.color}">${e.score}</td><td>$${e.price.toLocaleString('pt-PT')}</td></tr>`).join('');
 }
 
-renderGEX();renderCorr();compute();
+// ── INIT ──────────────────────────────────────────────────────────
+renderGEX(); renderCorr(); compute();
 </script>
 </body>
 </html>
