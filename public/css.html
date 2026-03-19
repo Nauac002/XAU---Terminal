@@ -159,7 +159,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12
   <div class="ov-msg">Currency Slope Strength</div>
   <div class="ov-prog-w"><div class="ov-prog" id="ov-prog"></div></div>
   <div class="ov-tf" id="ov-tf">Iniciando...</div>
-  <div class="ov-sub">Calculando variação acumulada por candle<br>28 pares × 5 timeframes · 100 pontos cada<br>Aguarde 30–60 segundos</div>
+  <div class="ov-sub">Calculando variação acumulada por candle<br>28 pares · cálculo sequencial por TF<br>M15 → M30 → H1 → H4 → D1</div>
 </div>
 
 <!-- HEADER -->
@@ -614,6 +614,122 @@ function renderPairs() {
 // ═════════════════════════════════════════════
 // FETCH ALL TFs
 // ═════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════
+// BROWSER-SIDE CSS CALCULATION (fallback when server unavailable)
+// Uses allorigins proxy to fetch Yahoo Finance directly
+// ═══════════════════════════════════════════════════════
+const PAIRS_CLIENT = [
+  {t:'EURUSD=X',b:'EUR',q:'USD'},{t:'GBPUSD=X',b:'GBP',q:'USD'},
+  {t:'AUDUSD=X',b:'AUD',q:'USD'},{t:'NZDUSD=X',b:'NZD',q:'USD'},
+  {t:'USDCAD=X',b:'USD',q:'CAD'},{t:'USDCHF=X',b:'USD',q:'CHF'},
+  {t:'USDJPY=X',b:'USD',q:'JPY'},{t:'EURGBP=X',b:'EUR',q:'GBP'},
+  {t:'EURAUD=X',b:'EUR',q:'AUD'},{t:'EURNZD=X',b:'EUR',q:'NZD'},
+  {t:'EURCAD=X',b:'EUR',q:'CAD'},{t:'EURCHF=X',b:'EUR',q:'CHF'},
+  {t:'EURJPY=X',b:'EUR',q:'JPY'},{t:'GBPAUD=X',b:'GBP',q:'AUD'},
+  {t:'GBPNZD=X',b:'GBP',q:'NZD'},{t:'GBPCAD=X',b:'GBP',q:'CAD'},
+  {t:'GBPCHF=X',b:'GBP',q:'CHF'},{t:'GBPJPY=X',b:'GBP',q:'JPY'},
+  {t:'AUDNZD=X',b:'AUD',q:'NZD'},{t:'AUDCAD=X',b:'AUD',q:'CAD'},
+  {t:'AUDCHF=X',b:'AUD',q:'CHF'},{t:'AUDJPY=X',b:'AUD',q:'JPY'},
+  {t:'NZDCAD=X',b:'NZD',q:'CAD'},{t:'NZDCHF=X',b:'NZD',q:'CHF'},
+  {t:'NZDJPY=X',b:'NZD',q:'JPY'},{t:'CADCHF=X',b:'CAD',q:'CHF'},
+  {t:'CADJPY=X',b:'CAD',q:'JPY'},{t:'CHFJPY=X',b:'CHF',q:'JPY'},
+];
+const CURS_C = ['USD','EUR','GBP','JPY','CHF','CAD','AUD','NZD'];
+const TF_CFG_C = {
+  D1:  {iv:'1d',  rng:'120d', pts:60},
+  H4:  {iv:'1h',  rng:'30d',  pts:60, rs:4},
+  H1:  {iv:'1h',  rng:'7d',   pts:60},
+  M30: {iv:'30m', rng:'5d',   pts:60},
+  M15: {iv:'15m', rng:'3d',   pts:60},
+};
+
+async function fetchCandlesBrowser(ticker, iv, rng) {
+  const yfUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=${iv}&range=${rng}`;
+  const proxies = [
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(yfUrl)}`,
+    `https://corsproxy.io/?url=${encodeURIComponent(yfUrl)}`,
+  ];
+  for (const url of proxies) {
+    try {
+      const r = await fetch(url, {signal: AbortSignal.timeout(12000)});
+      if (!r.ok) continue;
+      const d = await r.json();
+      const res = d?.chart?.result?.[0];
+      if (!res) continue;
+      const closes = res.indicators?.quote?.[0]?.close || [];
+      const timestamps = res.timestamp || [];
+      const valid = [];
+      for (let i = 0; i < closes.length; i++) {
+        if (closes[i] != null && timestamps[i] != null) valid.push({c: closes[i], t: timestamps[i]});
+      }
+      if (valid.length >= 8) return valid;
+    } catch(_) { continue; }
+  }
+  return null;
+}
+
+async function calcCSSBrowser(tfKey, progressCb) {
+  const cfg = TF_CFG_C[tfKey];
+  let done = 0;
+  // Fetch in batches of 4
+  const pairData = [];
+  for (let i = 0; i < PAIRS_CLIENT.length; i += 4) {
+    const batch = PAIRS_CLIENT.slice(i, i+4);
+    const results = await Promise.all(batch.map(async p => {
+      let c = await fetchCandlesBrowser(p.t, cfg.iv, cfg.rng);
+      if (!c || c.length < 8) return {...p, ok: false};
+      if (cfg.rs) { const o=[]; for(let j=3;j<c.length;j+=4)o.push(c[j]); c=o; }
+      return {...p, candles: c, ok: true};
+    }));
+    pairData.push(...results);
+    done += batch.length;
+    if (progressCb) progressCb(Math.round((done/PAIRS_CLIENT.length)*100));
+    await new Promise(r => setTimeout(r, 100));
+  }
+
+  const ok = pairData.filter(p => p.ok);
+  if (ok.length < 10) throw new Error(`Só ${ok.length}/28 pares carregados`);
+
+  const minLen = Math.min(...ok.map(p => p.candles.length));
+  const trimTo = Math.min(minLen, cfg.pts + 3);
+  ok.forEach(p => { p.candles = p.candles.slice(-trimTo); });
+  const N = ok[0].candles.length;
+
+  ok.forEach(p => {
+    const b0 = p.candles[0].c || 1;
+    p.pct = p.candles.map(c => ((c.c - b0) / b0) * 100);
+  });
+
+  const cnt = {}; CURS_C.forEach(c => cnt[c] = 0);
+  ok.forEach(p => { cnt[p.b]++; cnt[p.q]++; });
+  const raw = {}; CURS_C.forEach(c => raw[c] = new Array(N).fill(0));
+
+  for (let i = 0; i < N; i++) {
+    const s = {}; CURS_C.forEach(c => s[c] = 0);
+    ok.forEach(p => { s[p.b] += p.pct[i]; s[p.q] -= p.pct[i]; });
+    CURS_C.forEach(c => { raw[c][i] = cnt[c] > 0 ? s[c] / cnt[c] : 0; });
+  }
+
+  const labels = ok[0].candles.map(c => {
+    const d = new Date(c.t * 1000);
+    if (tfKey === 'D1') return `${d.getDate()}/${d.getMonth()+1}`;
+    const hh = String(d.getHours()).padStart(2,'0'), mm = String(d.getMinutes()).padStart(2,'0');
+    if (tfKey === 'H4' || tfKey === 'H1') return `${d.getDate()}/${d.getMonth()+1} ${hh}:${mm}`;
+    return `${hh}:${mm}`;
+  });
+
+  const scores = {}; CURS_C.forEach(c => { scores[c] = +raw[c][N-1].toFixed(5); });
+  const ranked = CURS_C.map(c => ({currency:c, score:scores[c]})).sort((a,b) => b.score-a.score);
+
+  return {
+    tf: tfKey, labels, series: raw, scores, ranked,
+    pairsOk: ok.length, points: N,
+    pairs: ok.map(p => ({ticker:p.t, base:p.b, quote:p.q, score:+p.pct[N-1].toFixed(5), ok:true})),
+    ts: new Date().toISOString()
+  };
+}
+
 async function doFetchAll(){
   const btn=document.getElementById('fetch-btn'),fi=document.getElementById('ficon');
   const ov=document.getElementById('overlay'),prog=document.getElementById('ov-prog');
@@ -623,75 +739,71 @@ async function doFetchAll(){
   btn.disabled=true; fi.classList.add('spin');
   ov.classList.remove('gone');
   lt.style.display='none'; rt.style.display='block';
+  prog.style.width='5%';
 
-  // Close overlay after 30s max — no matter what
   const safety=setTimeout(()=>{
     ov.classList.add('gone');
     btn.disabled=false; fi.classList.remove('spin');
     lt.style.display='block'; rt.style.display='none';
-    st.innerHTML='<span style="color:var(--red)">Timeout 30s — ver consola (F12) para detalhes</span>';
-  }, 30000);
+    st.innerHTML='<span style="color:var(--red)">Timeout — tenta novamente</span>';
+  }, 150000);
 
-  // Step 1: Test server is alive
-  ovTF.textContent='Passo 1/6: A contactar servidor...';
-  prog.style.width='5%';
-  try{
-    const h = await fetch('/health', {signal: AbortSignal.timeout(10000)});
-    const hd = await h.json();
-    ovTF.textContent='Servidor OK · '+hd.time;
-    prog.style.width='15%';
-  }catch(e){
-    clearTimeout(safety);
-    ov.classList.add('gone');
-    btn.disabled=false; fi.classList.remove('spin');
-    lt.style.display='block'; rt.style.display='none';
-    st.innerHTML='<span style="color:var(--red)">ERRO: Servidor não responde — '+e.message+'</span>';
-    return;
-  }
+  // Detect if running on Render server or standalone
+  let useServer = false;
+  ovTF.textContent='A verificar servidor...';
+  try {
+    const h = await fetch('/health', {signal: AbortSignal.timeout(5000)});
+    if (h.ok) { useServer = true; }
+  } catch(_) { useServer = false; }
 
-  // Step 2: Load TFs one by one with visible progress
-  const tfs=['M15','M30','H1','H4','D1'];
-  let loaded=0;
-  for(const tf of tfs){
-    const pct = 15 + ((loaded/tfs.length)*80);
-    prog.style.width=pct+'%';
-    ovTF.textContent='Passo '+(loaded+2)+'/6: Calculando '+tf+'...';
-    try{
-      const r=await fetch('/api/css/'+tf, {signal: AbortSignal.timeout(55000)});
-      if(!r.ok){
-        const errTxt = await r.text();
-        console.warn(tf+' HTTP '+r.status, errTxt);
-        ovTF.textContent=tf+' erro '+r.status+' — a continuar...';
-        await new Promise(r=>setTimeout(r,500));
-        continue;
+  const tfs = ['M15','M30','H1','H4','D1'];
+  let loaded = 0;
+
+  for (const tf of tfs) {
+    const pct = 5 + ((loaded / tfs.length) * 88);
+    prog.style.width = pct + '%';
+
+    try {
+      let data = null;
+
+      if (useServer) {
+        // Try server first
+        ovTF.textContent = 'Servidor: calculando ' + tf + '...';
+        try {
+          const r = await fetch('/api/css/' + tf, {signal: AbortSignal.timeout(50000)});
+          if (r.ok) { const d = await r.json(); if (d.series && !d.error) data = d; }
+        } catch(_) { useServer = false; }
       }
-      const d=await r.json();
-      if(d.error){
-        console.warn(tf+' error:', d.error);
-        ovTF.textContent=tf+' erro: '+d.error.substring(0,40)+'...';
-        await new Promise(r=>setTimeout(r,500));
-        continue;
+
+      if (!data) {
+        // Fallback: calculate directly in browser via proxy
+        ovTF.textContent = 'Browser: calculando ' + tf + ' (28 pares)...';
+        data = await calcCSSBrowser(tf, pct2 => {
+          prog.style.width = (pct + pct2 * 0.15) + '%';
+          ovTF.textContent = tf + ': ' + pct2 + '% dos pares...';
+        });
       }
-      if(d.series){
-        S.data[tf]=d;
+
+      if (data && data.series) {
+        S.data[tf] = data;
         loaded++;
-        ovTF.textContent='✓ '+tf+' carregado ('+d.pairsOk+'/28 pares, '+d.points+' pts)';
-        // Close overlay after first successful TF
-        if(loaded===1){
+        // Close overlay after first TF loads
+        if (loaded === 1) {
           clearTimeout(safety);
           ov.classList.add('gone');
           btn.disabled=false; fi.classList.remove('spin');
           lt.style.display='block'; rt.style.display='none';
         }
-        refreshChart(); renderPanel();
-        st.textContent=loaded+'/5 TFs · '+d.ts?.substring(11,19)+' UTC';
+        if (S.activeTF === tf || S.activeTF === 'ALL') refreshChart();
+        renderPanel();
+        const n=new Date(),ts=[n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
+        st.textContent = loaded + '/5 TFs · ' + ts + ' UTC' + (useServer ? ' · servidor' : ' · browser');
       }
-    }catch(e){
+    } catch(e) {
       console.warn(tf, e.message);
-      ovTF.textContent=tf+' timeout/erro — a continuar...';
-      await new Promise(r=>setTimeout(r,500));
+      ovTF.textContent = tf + ' falhou: ' + e.message.substring(0,50);
     }
-    await new Promise(r=>setTimeout(r,200));
+    await new Promise(r => setTimeout(r, 300));
   }
 
   clearTimeout(safety);
@@ -700,14 +812,15 @@ async function doFetchAll(){
   lt.style.display='block'; rt.style.display='none';
 
   const n=new Date(),ts=[n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
-  if(loaded>0){
-    st.textContent='✓ '+loaded+'/5 TFs · '+ts+' UTC · auto-refresh activo';
-    S.countdown=180; scheduleAutoRefresh();
-  }else{
-    st.innerHTML='<span style="color:var(--red)">0 TFs carregados · abre F12 > Consola para ver o erro</span>';
+  if (loaded > 0) {
+    st.textContent = '✓ ' + loaded + '/5 TFs · ' + ts + ' UTC · auto-refresh activo';
+    S.countdown = 240; scheduleAutoRefresh();
+  } else {
+    st.innerHTML = '<span style="color:var(--red)">0 TFs carregados. Verifica a ligação à internet.</span>';
   }
   refreshChart(); renderPanel();
 }
+
 
 function scheduleAutoRefresh() {
   // Clear existing timers
