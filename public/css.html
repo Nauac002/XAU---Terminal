@@ -6,8 +6,7 @@
 <title>CSS · Currency Slope Strength</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+
 <style>
 :root{
   --bg:#07090d;--bg2:#0c1017;--bg3:#111720;--bg4:#161e28;
@@ -329,7 +328,6 @@ function setTF(el, tf) {
 function initChart() {
   const ctx = document.getElementById('chart').getContext('2d');
   if (S.chart) { S.chart.destroy(); S.chart = null; }
-  ctx.canvas.addEventListener('dblclick', ()=>{ if(S.chart) S.chart.resetZoom(); });
   S.chart = new Chart(ctx, {
     type: 'line',
     data: { labels: [], datasets: CURS.map(c => ({
@@ -401,6 +399,8 @@ function refreshChart() {
     S.chart.data.datasets[i].data   = d.series[c] || [];
     S.chart.data.datasets[i].hidden = !S.vis.has(c);
   });
+  // Reset zoom indices if not zoomed
+  if(!ZP.zoomed){ ZP.minIdx=0; ZP.maxIdx=(d.labels.length-1); }
   S.chart.update('active');
   buildLegend(d);
 }
@@ -624,39 +624,44 @@ async function doFetchAll() {
   const liveTag = document.getElementById('live-tag');
   const refTag  = document.getElementById('refresh-tag');
 
-  btn.disabled = true; fi.classList.add('spin');
+  btn.disabled=true; fi.classList.add('spin');
   ov.classList.remove('gone');
-  prog.style.width = '5%';
-  liveTag.style.display = 'none';
-  refTag.style.display  = 'block';
+  prog.style.width='5%';
+  liveTag.style.display='none'; refTag.style.display='block';
 
-  const steps = ['Calculando D1 (100 velas)…','Calculando H4 (100 velas)…','Calculando H1 (100 velas)…','Calculando M30 (100 velas)…','Calculando M15 (100 velas)…'];
-  let si = 0, progV = 5;
-  const pi = setInterval(()=>{ progV=Math.min(progV+1.2,92); prog.style.width=progV+'%'; },700);
-  const si2 = setInterval(()=>{ if(si<steps.length){ovTF.textContent=steps[si++];} },11000);
+  // Safety: always close overlay after 95s
+  const safetyTimer=setTimeout(()=>{
+    ov.classList.add('gone');
+    btn.disabled=false; fi.classList.remove('spin');
+    liveTag.style.display='block'; refTag.style.display='none';
+    st.textContent='Timeout — tente novamente';
+  }, 95000);
 
-  try {
-    const r = await fetch('/api/css/all/multi', { signal: AbortSignal.timeout(160000) });
-    if (!r.ok) throw new Error('Server '+r.status);
-    const d = await r.json();
-    let ok = 0;
-    TFS.forEach(tf => {
-      if (d[tf]?.series && !d[tf].error) { S.data[tf]=d[tf]; ok++; }
-    });
+  const steps=['…D1','…H4','…H1','…M30','…M15'];
+  let si=0,progV=5;
+  const pi=setInterval(()=>{progV=Math.min(progV+1.2,92);prog.style.width=progV+'%';},700);
+  const si2=setInterval(()=>{if(si<steps.length)ovTF.textContent='Calculando '+steps[si++];},13000);
+
+  try{
+    const r=await fetch('/api/css/all/multi',{signal:AbortSignal.timeout(150000)});
+    if(!r.ok)throw new Error('Server '+r.status);
+    const d=await r.json();
+    let ok=0;
+    TFS.forEach(tf=>{if(d[tf]?.series&&!d[tf].error){S.data[tf]=d[tf];ok++;}});
     prog.style.width='100%';
-    const n=new Date();
-    const ts=[n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
-    st.textContent=`✓ ${ok}/5 TFs · ${ts} UTC · auto-refresh activo`;
-    S.countdown = 180; // 3 min countdown
+    const n=new Date(),ts=[n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
+    st.textContent='✓ '+ok+'/5 TFs · '+ts+' UTC · auto-refresh activo';
+    S.countdown=180;
     scheduleAutoRefresh();
-  } catch(e) {
-    st.textContent='Erro: '+e.message; console.error(e);
+  }catch(e){
+    st.textContent='Erro: '+e.message;
+    console.error(e);
   }
 
-  clearInterval(pi); clearInterval(si2);
+  clearInterval(pi);clearInterval(si2);clearTimeout(safetyTimer);
   setTimeout(()=>ov.classList.add('gone'),400);
-  btn.disabled=false; fi.classList.remove('spin');
-  liveTag.style.display='block'; refTag.style.display='none';
+  btn.disabled=false;fi.classList.remove('spin');
+  liveTag.style.display='block';refTag.style.display='none';
 
   refreshChart();
   renderPanel();
@@ -704,7 +709,100 @@ async function refreshTF(tf) {
 // ═════════════════════════════════════════════
 // INIT
 // ═════════════════════════════════════════════
-function resetZoom(){if(S.chart)S.chart.resetZoom();}
+// ── ZOOM & PAN (manual, no library) ─────────────────────────────
+const ZP = { dragging:false, startX:0, startIdx:0, minIdx:0, maxIdx:0, zoomed:false };
+
+function resetZoom(){
+  if(!S.chart)return;
+  ZP.zoomed=false;
+  const tf=S.activeTF==='ALL'?'M15':S.activeTF;
+  const d=S.data[tf];
+  const n=d?.labels?.length||100;
+  ZP.minIdx=0; ZP.maxIdx=n-1;
+  applyZoom(0, n-1);
+}
+
+function applyZoom(minI, maxI){
+  if(!S.chart)return;
+  const tf=S.activeTF==='ALL'?'M15':S.activeTF;
+  const d=S.data[tf];
+  if(!d?.labels) return;
+  const n=d.labels.length;
+  const lo=Math.max(0,Math.round(minI));
+  const hi=Math.min(n-1,Math.round(maxI));
+  if(hi-lo<3) return;
+  ZP.minIdx=lo; ZP.maxIdx=hi;
+  S.chart.options.scales.x.min=lo;
+  S.chart.options.scales.x.max=hi;
+  S.chart.update('none');
+}
+
+function initZoomPan(canvas){
+  // Wheel = zoom
+  canvas.addEventListener('wheel',(e)=>{
+    e.preventDefault();
+    if(!S.chart)return;
+    const tf=S.activeTF==='ALL'?'M15':S.activeTF;
+    const d=S.data[tf]; if(!d?.labels)return;
+    const n=d.labels.length;
+    const lo=ZP.minIdx||0, hi=ZP.maxIdx||(n-1);
+    const range=hi-lo;
+    const factor=e.deltaY>0?1.15:0.87; // scroll down=zoom out, up=zoom in
+    const newRange=Math.round(range*factor);
+    const mid=(lo+hi)/2;
+    const newLo=Math.max(0,Math.round(mid-newRange/2));
+    const newHi=Math.min(n-1,Math.round(mid+newRange/2));
+    ZP.zoomed=true;
+    applyZoom(newLo, newHi);
+  },{passive:false});
+
+  // Mouse drag = pan
+  canvas.addEventListener('mousedown',(e)=>{
+    if(e.button!==0)return;
+    ZP.dragging=true;
+    ZP.startX=e.clientX;
+    ZP.startIdx=ZP.minIdx;
+    canvas.style.cursor='grabbing';
+  });
+  window.addEventListener('mousemove',(e)=>{
+    if(!ZP.dragging||!S.chart)return;
+    const tf=S.activeTF==='ALL'?'M15':S.activeTF;
+    const d=S.data[tf]; if(!d?.labels)return;
+    const n=d.labels.length;
+    const w=canvas.clientWidth;
+    const range=ZP.maxIdx-ZP.minIdx;
+    const dx=e.clientX-ZP.startX;
+    const pxPerPt=w/range;
+    const shift=Math.round(-dx/pxPerPt);
+    const newLo=Math.max(0,ZP.startIdx+shift);
+    const newHi=Math.min(n-1,newLo+range);
+    applyZoom(newLo, newHi);
+  });
+  window.addEventListener('mouseup',()=>{
+    ZP.dragging=false;
+    canvas.style.cursor='crosshair';
+  });
+
+  // Touch pan
+  let lastTouchX=0;
+  canvas.addEventListener('touchstart',(e)=>{lastTouchX=e.touches[0].clientX;ZP.startIdx=ZP.minIdx;},{passive:true});
+  canvas.addEventListener('touchmove',(e)=>{
+    if(!S.chart)return;
+    const tf=S.activeTF==='ALL'?'M15':S.activeTF;
+    const d=S.data[tf];if(!d?.labels)return;
+    const n=d.labels.length,w=canvas.clientWidth;
+    const range=ZP.maxIdx-ZP.minIdx;
+    const dx=e.touches[0].clientX-lastTouchX;
+    const pxPerPt=w/range;
+    const shift=Math.round(-dx/pxPerPt);
+    const newLo=Math.max(0,(ZP.startIdx||0)+shift);
+    const newHi=Math.min(n-1,newLo+range);
+    applyZoom(newLo,newHi);
+  },{passive:true});
+
+  // Double click = reset
+  canvas.addEventListener('dblclick',()=>resetZoom());
+}
 buildCurBtns();
 initChart();
 setTimeout(doFetchAll, 500);
