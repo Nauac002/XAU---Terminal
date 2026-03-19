@@ -3,19 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>XAU · Terminal Live v8 · MFC</title>
+<title>XAU · Terminal v10 · Smart Money</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-:root {
+:root{
   --bg:#07090d;--bg2:#0c1017;--bg3:#111720;--bg4:#161e28;
-  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.13);
   --text:#dde4f0;--muted:#5a6680;--dim:#2a3448;
   --green:#19e6a0;--green2:rgba(25,230,160,0.12);--green3:rgba(25,230,160,0.06);
   --red:#ff4d6d;--red2:rgba(255,77,109,0.14);--red3:rgba(255,77,109,0.06);
   --amber:#f5a623;--amber2:rgba(245,166,35,0.14);--amber3:rgba(245,166,35,0.06);
   --blue:#38b6ff;--blue2:rgba(56,182,255,0.12);
-  --purple:#a78bfa;--purple2:rgba(167,139,250,0.14);--purple3:rgba(167,139,250,0.06);
-  --teal:#2dd4bf;
+  --purple:#a78bfa;--purple2:rgba(167,139,250,0.14);
   --mono:'IBM Plex Mono',monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -25,143 +24,144 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes pulse{0%{opacity:.3;transform:scale(.97)}100%{opacity:1;transform:scale(1)}}
 @keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-@keyframes barGrow{from{width:0}to{width:var(--w)}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes glow{0%,100%{box-shadow:0 0 8px currentColor}50%{box-shadow:0 0 20px currentColor}}
+@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 
-/* ── HEADER ─────────────────────────────────────────────────────────── */
+/* ── HEADER ── */
 .hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-bottom:1px solid var(--border2);background:var(--bg2);position:sticky;top:0;z-index:200}
 .logo{font-size:13px;font-weight:600;color:var(--green);letter-spacing:.12em}
 .logo em{color:var(--muted);font-style:normal;font-weight:300}
 .hdr-tags{display:flex;gap:8px}
 .htag{font-size:9px;padding:2px 7px;border-radius:3px;border:1px solid var(--border2);color:var(--muted);letter-spacing:.08em}
 .htag.new{border-color:rgba(167,139,250,.4);color:var(--purple)}
+.hdr-right{display:flex;align-items:center;gap:14px}
 .clock{font-size:13px;font-weight:500;letter-spacing:.06em}
 .ldot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1.4s ease-in-out infinite}
 .llbl{font-size:9px;color:var(--green);letter-spacing:.1em}
 
-/* ── FETCH BAR ─────────────────────────────────────────────────────── */
+/* ── FETCH BAR ── */
 .fetch-bar{display:flex;align-items:center;gap:10px;padding:8px 18px;background:var(--bg2);border-bottom:1px solid var(--border);flex-wrap:wrap}
 .fetch-btn{display:flex;align-items:center;gap:7px;padding:7px 16px;background:var(--green2);border:1px solid var(--green);border-radius:4px;color:var(--green);font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.08em;cursor:pointer;transition:all .2s;white-space:nowrap}
 .fetch-btn:hover{background:rgba(25,230,160,.22)}
 .fetch-btn:disabled{opacity:.4;cursor:not-allowed}
 .ficon{width:13px;height:13px;flex-shrink:0}
 .spin{animation:spin .8s linear infinite}
-.server-badge{font-size:9px;padding:2px 8px;border-radius:3px;background:var(--green2);border:1px solid rgba(25,230,160,.4);color:var(--green);white-space:nowrap}
+.server-badge{font-size:9px;padding:2px 8px;border-radius:3px;background:var(--green2);border:1px solid rgba(25,230,160,.4);color:var(--green)}
 .fetch-status{font-size:10px;color:var(--muted);flex:1}
 .src-chips{display:flex;gap:5px;flex-wrap:wrap}
 .schip{font-size:9px;padding:2px 7px;border-radius:3px;border:1px solid var(--border);color:var(--muted);background:var(--bg3)}
 .schip.ok{border-color:rgba(25,230,160,.35);color:var(--green)}
 .schip.err{border-color:rgba(255,77,109,.35);color:var(--red)}
 .schip.loading{border-color:rgba(245,166,35,.35);color:var(--amber);animation:blink .6s ease-in-out infinite}
-.schip.mfc{border-color:rgba(167,139,250,.35);color:var(--purple)}
-.schip.mfc.ok{border-color:rgba(167,139,250,.6);color:var(--purple);background:var(--purple3)}
 .countdown{font-size:9px;color:var(--dim);white-space:nowrap}
 
-/* ── TICKER ────────────────────────────────────────────────────────── */
+/* ── TICKER ── */
 .ticker-wrap{overflow:hidden;border-bottom:1px solid var(--border);background:var(--bg2);padding:5px 0}
 .ticker{display:flex;gap:36px;animation:scroll 36s linear infinite;width:max-content}
 .ti{display:flex;align-items:center;gap:7px;font-size:11px;white-space:nowrap}
 .ti-n{color:var(--muted)}.ti-v{font-weight:500}
 .pos{color:var(--green)}.neg{color:var(--red)}.neu{color:var(--amber)}
 
-/* ── SIGNAL BANNER ────────────────────────────────────────────────── */
-.sig-banner{margin:10px 18px;border-radius:6px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border:1px solid;transition:all .4s}
-.sig-banner.buy{background:var(--green3);border-color:var(--green)}
-.sig-banner.sell{background:var(--red3);border-color:var(--red)}
-.sig-banner.wait{background:var(--amber3);border-color:var(--amber)}
-.sig-label{font-size:20px;font-weight:600;letter-spacing:.12em}
-.buy .sig-label{color:var(--green)}.sell .sig-label{color:var(--red)}.wait .sig-label{color:var(--amber)}
-.sig-meta{font-size:11px;color:var(--muted);margin-top:4px}
-.sig-meta b{color:var(--text);font-weight:500}
-.sig-right{display:flex;align-items:center;gap:20px}
-.score-ring{position:relative;width:62px;height:62px}
-.score-ring svg{transform:rotate(-90deg)}
-.score-num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:15px;font-weight:600}
-.buy .score-num{color:var(--green)}.sell .score-num{color:var(--red)}.wait .score-num{color:var(--amber)}
-.sig-levels{font-size:11px;text-align:right}
-.sig-levels .lbl{font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
-.sig-levels .val{font-weight:500;margin-bottom:5px}
+/* ══════════════════════════════════════════
+   MAIN SIGNAL CARD — the most important UI
+   ══════════════════════════════════════════ */
+.signal-card{margin:12px 18px;border-radius:8px;padding:0;border:1px solid;transition:all .4s;overflow:hidden;animation:slideIn .4s ease-out}
+.signal-card.buy{border-color:var(--green);background:linear-gradient(135deg,rgba(25,230,160,0.08) 0%,rgba(7,9,13,0) 60%)}
+.signal-card.sell{border-color:var(--red);background:linear-gradient(135deg,rgba(255,77,109,0.08) 0%,rgba(7,9,13,0) 60%)}
+.signal-card.wait{border-color:var(--amber);background:linear-gradient(135deg,rgba(245,166,35,0.08) 0%,rgba(7,9,13,0) 60%)}
+.signal-card.watch{border-color:var(--blue);background:linear-gradient(135deg,rgba(56,182,255,0.08) 0%,rgba(7,9,13,0) 60%)}
 
-/* ── GRIDS ─────────────────────────────────────────────────────────── */
+.sc-top{display:flex;align-items:stretch;padding:14px 18px;gap:20px}
+.sc-left{flex:1}
+.sc-eyebrow{font-size:9px;color:var(--muted);letter-spacing:.12em;margin-bottom:6px}
+.sc-signal-label{font-size:22px;font-weight:600;letter-spacing:.1em;margin-bottom:6px}
+.buy .sc-signal-label{color:var(--green)}
+.sell .sc-signal-label{color:var(--red)}
+.wait .sc-signal-label{color:var(--amber)}
+.watch .sc-signal-label{color:var(--blue)}
+.sc-reason{font-size:11px;color:var(--muted);line-height:1.7;max-width:500px}
+.sc-reason b{color:var(--text);font-weight:500}
+
+.sc-mid{display:flex;flex-direction:column;gap:8px;min-width:200px}
+.sc-level-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:5px 10px;border-radius:5px;background:var(--bg3)}
+.sc-level-lbl{font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;flex-shrink:0}
+.sc-level-val{font-size:14px;font-weight:600}
+.sc-level-sub{font-size:9px;color:var(--muted)}
+
+.sc-right{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:100px}
+.sc-ring{position:relative;width:80px;height:80px}
+.sc-ring svg{transform:rotate(-90deg)}
+.sc-ring-num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.sc-ring-pct{font-size:20px;font-weight:600;line-height:1}
+.sc-ring-lbl{font-size:8px;color:var(--muted);letter-spacing:.06em}
+.buy .sc-ring-pct{color:var(--green)}
+.sell .sc-ring-pct{color:var(--red)}
+.wait .sc-ring-pct, .watch .sc-ring-pct{color:var(--amber)}
+.sc-pillars-count{font-size:10px;color:var(--muted)}
+
+/* BOTTOM STRIP — entry/target/stop */
+.sc-bottom{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--border);background:var(--bg2)}
+.sc-box{padding:10px 14px;border-right:1px solid var(--border);text-align:center}
+.sc-box:last-child{border-right:none}
+.sc-box-lbl{font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.sc-box-val{font-size:16px;font-weight:600}
+.sc-box-sub{font-size:9px;color:var(--muted);margin-top:2px}
+
+/* WATCH MODE — waiting for price */
+.watch-bar{padding:10px 18px;border-top:1px solid var(--border);background:rgba(56,182,255,.06);display:flex;align-items:center;gap:12px}
+.watch-icon{font-size:14px}
+.watch-msg{font-size:12px;color:var(--blue);flex:1;line-height:1.6}
+.watch-msg b{font-weight:600}
+.watch-price{font-size:18px;font-weight:600;color:var(--blue);white-space:nowrap}
+
+/* ── GRIDS ── */
 .g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:0 18px;margin-bottom:8px}
 .g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:0 18px;margin-bottom:8px}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 18px;margin-bottom:8px}
 .g2l{display:grid;grid-template-columns:2fr 1fr;gap:8px;padding:0 18px;margin-bottom:8px}
-.gmfc{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:8px;padding:0 18px;margin-bottom:8px}
 
-/* ── PANEL ─────────────────────────────────────────────────────────── */
+/* ── PANEL ── */
 .panel{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px 14px;position:relative;overflow:hidden}
 .panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent)}
-.panel.mfc-panel{border-color:rgba(167,139,250,.2)}
-.panel.mfc-panel::before{background:linear-gradient(90deg,transparent,rgba(167,139,250,.3),transparent)}
 .ptitle{font-size:9px;font-weight:600;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px}
-.ptitle.purple{color:var(--purple)}
 .psrc{color:var(--dim);font-weight:400;font-size:8px}
 
-/* ── DATA CELLS ───────────────────────────────────────────────────── */
+/* ── DATA CELLS ── */
 .data-cell{background:var(--bg3);border-radius:5px;padding:10px 12px}
 .dc-lbl{font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
 .dc-val{font-size:20px;font-weight:600;color:var(--text);margin-bottom:2px;min-height:28px;display:flex;align-items:center;gap:8px}
 .dc-sub{font-size:10px;color:var(--muted)}
-.loading-val{color:var(--dim);font-size:13px}
 .pulse{animation:pulse .6s ease-out}
 
-/* ── PILLAR ROWS ──────────────────────────────────────────────────── */
+/* ── PILLAR ROWS ── */
 .pr{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
 .pr:last-child{border-bottom:none}
 .pdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .pd-g{background:var(--green);box-shadow:0 0 5px var(--green)}
 .pd-r{background:var(--red);box-shadow:0 0 5px var(--red)}
 .pd-a{background:var(--amber);box-shadow:0 0 5px var(--amber)}
-.pd-p{background:var(--purple);box-shadow:0 0 5px var(--purple)}
+.pd-b{background:var(--blue);box-shadow:0 0 5px var(--blue)}
 .pd-d{background:var(--dim)}
 .pname{font-size:11px;color:var(--text);flex:1}
 .pval{font-size:11px;font-weight:500;min-width:90px;text-align:right}
 .psig{font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600;letter-spacing:.06em;margin-left:6px}
-.ps-b{background:var(--green2);color:var(--green)}.ps-s{background:var(--red2);color:var(--red)}.ps-w{background:var(--amber2);color:var(--amber)}.ps-p{background:var(--purple2);color:var(--purple)}
+.ps-b{background:var(--green2);color:var(--green)}
+.ps-s{background:var(--red2);color:var(--red)}
+.ps-w{background:var(--amber2);color:var(--amber)}
 .score-row{display:flex;align-items:center;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
 .prog{background:var(--bg3);border-radius:2px;height:5px;overflow:hidden;flex:1}
 .prog-f{height:100%;border-radius:2px;transition:width .5s,background .4s}
 
-/* ── MFC CHART ────────────────────────────────────────────────────── */
-.mfc-bar-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);animation:fadeUp .3s ease-out both}
-.mfc-bar-row:last-child{border-bottom:none}
-.mfc-rank{font-size:9px;color:var(--dim);width:14px;text-align:center;flex-shrink:0}
-.mfc-currency{font-size:12px;font-weight:600;width:32px;flex-shrink:0}
-.mfc-bar-wrap{flex:1;height:16px;background:var(--bg3);border-radius:3px;overflow:hidden;position:relative}
-.mfc-bar-fill{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1)}
-.mfc-pct{font-size:11px;font-weight:500;width:50px;text-align:right;flex-shrink:0}
-.mfc-raw{font-size:9px;color:var(--muted);width:54px;text-align:right;flex-shrink:0}
-
-/* Currency colours */
-.usd-col{color:#60a5fa}.eur-col{color:#34d399}.gbp-col{color:#a78bfa}
-.jpy-col{color:#f87171}.chf-col{color:#fbbf24}.cad-col{color:#f97316}
-.aud-col{color:#22d3ee}.nzd-col{color:#e879f9}
-
-/* ── MFC SIGNAL ────────────────────────────────────────────────────── */
-.mfc-signal-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
-.mfc-sig-card{background:var(--bg3);border-radius:4px;padding:8px 10px;border-left:3px solid}
-.mfc-sig-card .sc-lbl{font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
-.mfc-sig-card .sc-pair{font-size:14px;font-weight:600}
-.mfc-sig-card .sc-why{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.5}
-
-/* ── PAIR HEATMAP ──────────────────────────────────────────────────── */
-.heat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
-.heat-cell{border-radius:3px;padding:5px 6px;text-align:center}
-.heat-ticker{font-size:9px;color:var(--muted);margin-bottom:2px}
-.heat-val{font-size:11px;font-weight:600}
-
-/* ── ALERTS ─────────────────────────────────────────────────────────── */
+/* ── ALERTS ── */
 .alert{border-left:3px solid;padding:8px 11px;border-radius:0 5px 5px 0;margin-bottom:6px;font-size:11px;line-height:1.6}
 .alert:last-child{margin-bottom:0}
 .alert.crit{border-color:var(--red);background:var(--red3);color:#ffb3c0}
 .alert.warn{border-color:var(--amber);background:var(--amber3);color:#fde68a}
 .alert.good{border-color:var(--green);background:var(--green3);color:#a7f3d0}
 .alert.info{border-color:var(--blue);background:var(--blue2);color:#bae6fd}
-.alert.mfc-alert{border-color:var(--purple);background:var(--purple3);color:#ddd6fe}
 .at{font-weight:600;letter-spacing:.04em;margin-bottom:2px}
 
-/* ── GEX ────────────────────────────────────────────────────────────── */
+/* ── GEX ── */
 .gex-row{display:flex;align-items:center;gap:5px;padding:3px 0}
 .gex-px{width:50px;text-align:right;font-size:11px;color:var(--muted);flex-shrink:0}
 .gex-px.active{color:var(--amber);font-weight:600}
@@ -175,7 +175,7 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 .rb-long{background:var(--green2);color:var(--green);border:1px solid rgba(25,230,160,.4)}
 .rb-flip{background:var(--amber2);color:var(--amber);border:1px solid rgba(245,166,35,.4)}
 
-/* ── MISC ────────────────────────────────────────────────────────────── */
+/* ── MISC ── */
 .mstat{text-align:center}
 .mstat .mv{font-size:18px;font-weight:600;min-height:27px}
 .mstat .ml{font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
@@ -207,7 +207,11 @@ select.inp{cursor:pointer;appearance:none;padding-right:22px;background-image:ur
 .scen-prog{height:2px;border-radius:2px;margin-top:6px;opacity:.5}
 .ftr{padding:8px 18px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:9px;color:var(--dim);flex-wrap:wrap;gap:4px}
 
-@media(max-width:900px){.g4{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr}.g2l{grid-template-columns:1fr}.gmfc{grid-template-columns:1fr}}
+/* ── CSS LINK ── */
+.nav-btn{font-size:10px;padding:5px 14px;border:1px solid var(--border2);border-radius:4px;color:var(--muted);text-decoration:none;letter-spacing:.06em;transition:all .2s;white-space:nowrap}
+.nav-btn:hover{border-color:var(--amber);color:var(--amber)}
+
+@media(max-width:880px){.g4{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr}.g2l{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -215,14 +219,15 @@ select.inp{cursor:pointer;appearance:none;padding-right:22px;background-image:ur
 <!-- HEADER -->
 <div class="hdr">
   <div style="display:flex;align-items:center;gap:14px">
-    <div class="logo">XAU<em>/USD</em> TERMINAL <em style="font-size:9px">v8</em></div>
+    <div class="logo">XAU<em>/USD</em> TERMINAL <em style="font-size:9px">v10</em></div>
     <div class="hdr-tags">
       <div class="htag">SMART MONEY · 6 PILARES</div>
-      <div class="htag">SERVIDOR DIRETO · SEM PROXY</div>
-      <div class="htag new">✦ MFC · 28 PARES · NOVO</div>
+      <div class="htag">SERVIDOR DIRETO</div>
+      <div class="htag new">✦ ENTRY PRECISION MODE</div>
     </div>
   </div>
-  <div style="display:flex;align-items:center;gap:14px">
+  <div class="hdr-right">
+    <a href="/css.html" class="nav-btn">CSS Dashboard →</a>
     <div class="clock" id="clock">--:--:--</div>
     <div style="display:flex;align-items:center;gap:5px"><div class="ldot"></div><div class="llbl">LIVE</div></div>
   </div>
@@ -234,10 +239,10 @@ select.inp{cursor:pointer;appearance:none;padding-right:22px;background-image:ur
     <svg class="ficon" id="ficon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
       <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.66 0 3-4.03 3-9s-1.34-9-3-9"/>
     </svg>
-    BUSCAR DADOS AGORA
+    BUSCAR DADOS
   </button>
-  <div class="server-badge">✓ NODE.JS · DIRETO · SEM BLOQUEIOS</div>
-  <div class="fetch-status" id="fetch-status">Pronto — inclui MFC (28 pares forex) →</div>
+  <div class="server-badge">✓ NODE.JS · DIRETO</div>
+  <div class="fetch-status" id="fetch-status">Pressione para carregar dados de mercado →</div>
   <div class="src-chips">
     <div class="schip" id="chip-xau">XAU</div>
     <div class="schip" id="chip-dxy">DXY</div>
@@ -246,7 +251,6 @@ select.inp{cursor:pointer;appearance:none;padding-right:22px;background-image:ur
     <div class="schip" id="chip-ust">UST</div>
     <div class="schip" id="chip-tips">TIPS</div>
     <div class="schip" id="chip-fed">FED</div>
-    <div class="schip mfc" id="chip-mfc">MFC 28p</div>
   </div>
   <div class="countdown" id="countdown">Auto: —</div>
 </div>
@@ -260,115 +264,121 @@ select.inp{cursor:pointer;appearance:none;padding-right:22px;background-image:ur
     <div class="ti"><span class="ti-n">EUR/USD</span><span class="ti-v" id="tk-eur">—</span></div>
     <div class="ti"><span class="ti-n">UST 10Y</span><span class="ti-v" id="tk-ust">—</span></div>
     <div class="ti"><span class="ti-n">TIPS 10Y</span><span class="ti-v" id="tk-tips">—</span></div>
-    <div class="ti"><span class="ti-n">USD Força</span><span class="ti-v" id="tk-usd-str">—</span><span id="tk-usd-rank" class="neu">—</span></div>
-    <div class="ti"><span class="ti-n">MFC Top</span><span class="ti-v" id="tk-mfc-top">—</span><span class="pos">↑ mais forte</span></div>
-    <div class="ti"><span class="ti-n">MFC Bot</span><span class="ti-v" id="tk-mfc-bot">—</span><span class="neg">↓ mais fraca</span></div>
-    <div class="ti"><span class="ti-n">COT Net Long</span><span class="ti-v">+160.145</span><span class="neg">▼ -2 sem.</span></div>
-    <div class="ti"><span class="ti-n">ETF Flows</span><span class="ti-v">+$5.3Bn</span><span class="pos">9 meses ▲</span></div>
-    <!-- duplicate -->
+    <div class="ti"><span class="ti-n">COT Net</span><span class="ti-v">+160.145</span><span class="neg">▼</span></div>
+    <div class="ti"><span class="ti-n">ETF Flows</span><span class="ti-v">+$5.3Bn</span><span class="pos">▲</span></div>
+    <div class="ti"><span class="ti-n">GEX</span><span class="ti-v">Short Gamma</span><span class="neg">⚠</span></div>
+    <!-- dup -->
     <div class="ti"><span class="ti-n">XAU/USD</span><span class="ti-v" id="tk-xau2">—</span></div>
     <div class="ti"><span class="ti-n">DXY</span><span class="ti-v" id="tk-dxy2">—</span></div>
     <div class="ti"><span class="ti-n">WTI</span><span class="ti-v" id="tk-wti2">—</span></div>
-    <div class="ti"><span class="ti-n">USD Força</span><span class="ti-v" id="tk-usd-str2">—</span></div>
-    <div class="ti"><span class="ti-n">MFC Top</span><span class="ti-v" id="tk-mfc-top2">—</span></div>
-    <div class="ti"><span class="ti-n">COT Net Long</span><span class="ti-v">+160.145</span><span class="neg">▼</span></div>
+    <div class="ti"><span class="ti-n">UST 10Y</span><span class="ti-v" id="tk-ust2">—</span></div>
+    <div class="ti"><span class="ti-n">TIPS 10Y</span><span class="ti-v" id="tk-tips2">—</span></div>
+    <div class="ti"><span class="ti-n">COT Net</span><span class="ti-v">+160.145</span><span class="neg">▼</span></div>
   </div>
 </div>
 
-<!-- SIGNAL BANNER -->
-<div class="sig-banner wait" id="sig-banner">
-  <div>
-    <div style="font-size:9px;color:var(--muted);letter-spacing:.1em">SINAL COMBINADO · 6 PILARES INSTITUCIONAIS + MFC</div>
-    <div class="sig-label" id="sig-label">⬤ PRESSIONE BUSCAR DADOS</div>
-    <div class="sig-meta">Divergência: <b id="sig-div">—</b> · Confiança: <b id="sig-conf">—</b> · Regime: <b id="sig-regime">—</b> · USD Força: <b id="sig-usd">—</b></div>
-  </div>
-  <div class="sig-right">
-    <div class="score-ring">
-      <svg width="62" height="62" viewBox="0 0 62 62">
-        <circle cx="31" cy="31" r="25" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="5"/>
-        <circle id="score-arc" cx="31" cy="31" r="25" fill="none" stroke="#f5a623" stroke-width="5" stroke-dasharray="157" stroke-dashoffset="157" stroke-linecap="round" style="transition:stroke-dashoffset .6s,stroke .4s"/>
-      </svg>
-      <div class="score-num" id="score-num">—</div>
+<!-- ══════════════════════════════════════
+     MAIN SIGNAL CARD
+     ══════════════════════════════════════ -->
+<div class="signal-card wait" id="signal-card">
+  <div class="sc-top">
+    <div class="sc-left">
+      <div class="sc-eyebrow">SINAL INSTITUCIONAL · 6 PILARES · SMART MONEY</div>
+      <div class="sc-signal-label" id="sc-label">⬤ AGUARDANDO DADOS</div>
+      <div class="sc-reason" id="sc-reason">
+        Pressione "Buscar Dados" para carregar preços e calcular o sinal.
+      </div>
     </div>
-    <div class="sig-levels">
-      <div><div class="lbl">ENTRADA</div><div class="val pos" id="sl-entry">—</div></div>
-      <div><div class="lbl">STOP</div><div class="val neg" id="sl-stop">—</div></div>
-      <div><div class="lbl">ALVO R:R</div><div class="val" style="color:var(--blue)" id="sl-tp">—</div></div>
+    <div class="sc-mid" id="sc-mid">
+      <div class="sc-level-row">
+        <span class="sc-level-lbl">ENTRADA</span>
+        <span class="sc-level-val" id="sc-entry" style="color:var(--green)">—</span>
+        <span class="sc-level-sub" id="sc-entry-sub">—</span>
+      </div>
+      <div class="sc-level-row">
+        <span class="sc-level-lbl">STOP LOSS</span>
+        <span class="sc-level-val" id="sc-stop" style="color:var(--red)">—</span>
+        <span class="sc-level-sub" id="sc-stop-sub">—</span>
+      </div>
+      <div class="sc-level-row">
+        <span class="sc-level-lbl">ALVO TP1</span>
+        <span class="sc-level-val" id="sc-tp1" style="color:var(--blue)">—</span>
+        <span class="sc-level-sub" id="sc-tp1-sub">—</span>
+      </div>
+      <div class="sc-level-row">
+        <span class="sc-level-lbl">ALVO TP2</span>
+        <span class="sc-level-val" id="sc-tp2" style="color:var(--purple)">—</span>
+        <span class="sc-level-sub" id="sc-tp2-sub">—</span>
+      </div>
+    </div>
+    <div class="sc-right">
+      <div class="sc-ring">
+        <svg width="80" height="80" viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6"/>
+          <circle id="ring-arc" cx="40" cy="40" r="32" fill="none" stroke="#f5a623" stroke-width="6"
+            stroke-dasharray="201" stroke-dashoffset="201" stroke-linecap="round"
+            style="transition:stroke-dashoffset .6s,stroke .4s"/>
+        </svg>
+        <div class="sc-ring-num">
+          <div class="sc-ring-pct" id="ring-pct">—</div>
+          <div class="sc-ring-lbl">SCORE</div>
+        </div>
+      </div>
+      <div class="sc-pillars-count" id="pillars-count">— / 6 pilares</div>
+    </div>
+  </div>
+
+  <!-- WATCH BAR — shows when waiting for price -->
+  <div class="watch-bar" id="watch-bar" style="display:none">
+    <div class="watch-icon">⏳</div>
+    <div class="watch-msg" id="watch-msg">—</div>
+    <div class="watch-price" id="watch-price">—</div>
+  </div>
+
+  <!-- BOTTOM STRIP -->
+  <div class="sc-bottom">
+    <div class="sc-box">
+      <div class="sc-box-lbl">ASSERTIVIDADE</div>
+      <div class="sc-box-val" id="sc-assert" style="color:var(--amber)">—%</div>
+      <div class="sc-box-sub" id="sc-assert-sub">pilares confirmados</div>
+    </div>
+    <div class="sc-box">
+      <div class="sc-box-lbl">R:R RATIO</div>
+      <div class="sc-box-val" id="sc-rr" style="color:var(--blue)">—</div>
+      <div class="sc-box-sub">risco vs retorno</div>
+    </div>
+    <div class="sc-box">
+      <div class="sc-box-lbl">REGIME GEX</div>
+      <div class="sc-box-val" id="sc-regime" style="color:var(--amber)">—</div>
+      <div class="sc-box-sub">gamma exposure</div>
+    </div>
+    <div class="sc-box">
+      <div class="sc-box-lbl">DIVERGÊNCIA</div>
+      <div class="sc-box-val" id="sc-div" style="font-size:12px;color:var(--amber)">—</div>
+      <div class="sc-box-sub" id="sc-div-sub">—</div>
     </div>
   </div>
 </div>
 
-<!-- LIVE DATA CELLS -->
+<!-- LIVE DATA -->
 <div class="g4" style="margin-top:8px">
-  <div class="data-cell"><div class="dc-lbl">XAU/USD SPOT <span id="age-xau" style="font-size:8px;color:var(--dim)">—</span></div><div class="dc-val" id="v-xau"><span class="loading-val">aguardando...</span></div><div class="dc-sub">Gold Futures · GC=F</div></div>
-  <div class="data-cell"><div class="dc-lbl">DXY INDEX <span id="age-dxy" style="font-size:8px;color:var(--dim)">—</span></div><div class="dc-val" id="v-dxy"><span class="loading-val">aguardando...</span></div><div class="dc-sub">ICE US Dollar Index</div></div>
-  <div class="data-cell"><div class="dc-lbl">TIPS 10Y REAL YIELD <span id="age-tips" style="font-size:8px;color:var(--dim)">—</span></div><div class="dc-val" id="v-tips"><span class="loading-val">aguardando...</span></div><div class="dc-sub">FRED DFII10 · inimigo nº1 ouro</div></div>
-  <div class="data-cell"><div class="dc-lbl">UST 10Y NOMINAL <span id="age-ust" style="font-size:8px;color:var(--dim)">—</span></div><div class="dc-val" id="v-ust"><span class="loading-val">aguardando...</span></div><div class="dc-sub">FRED DGS10</div></div>
+  <div class="data-cell"><div class="dc-lbl">XAU/USD SPOT <span id="age-xau" style="font-size:8px;color:var(--dim)">—</span></div><div class="dc-val" id="v-xau"><span style="color:var(--dim);font-size:13px">aguardando...</span></div><div class="dc-sub">Gold Futures · GC=F</div></div>
+  <div class="data-cell"><div class="dc-lbl">DXY INDEX <span id="age-dxy" style="font-size:8px;color:var(--dim)">—</span></div><div class="dc-val" id="v-dxy"><span style="color:var(--dim);font-size:13px">aguardando...</span></div><div class="dc-sub">ICE Dollar Index</div></div>
+  <div class="data-cell"><div class="dc-lbl">TIPS 10Y REAL YIELD <span id="age-tips" style="font-size:8px;color:var(--dim)">—</span></div><div class="dc-val" id="v-tips"><span style="color:var(--dim);font-size:13px">aguardando...</span></div><div class="dc-sub">FRED DFII10 · inimigo nº1</div></div>
+  <div class="data-cell"><div class="dc-lbl">UST 10Y NOMINAL <span id="age-ust" style="font-size:8px;color:var(--dim)">—</span></div><div class="dc-val" id="v-ust"><span style="color:var(--dim);font-size:13px">aguardando...</span></div><div class="dc-sub">FRED DGS10</div></div>
 </div>
 <div class="g4">
-  <div class="data-cell"><div class="dc-lbl">WTI PETRÓLEO <span id="age-wti" style="font-size:8px;color:var(--dim)">—</span></div><div class="dc-val" id="v-wti"><span class="loading-val">aguardando...</span></div><div class="dc-sub">Crude Oil · CL=F</div></div>
-  <div class="data-cell"><div class="dc-lbl">EUR/USD <span id="age-eur" style="font-size:8px;color:var(--dim)">—</span></div><div class="dc-val" id="v-eur"><span class="loading-val">aguardando...</span></div><div class="dc-sub">Forex · EURUSD=X</div></div>
+  <div class="data-cell"><div class="dc-lbl">WTI PETRÓLEO <span id="age-wti" style="font-size:8px;color:var(--dim)">—</span></div><div class="dc-val" id="v-wti"><span style="color:var(--dim);font-size:13px">aguardando...</span></div><div class="dc-sub">Crude · CL=F</div></div>
+  <div class="data-cell"><div class="dc-lbl">EUR/USD <span id="age-eur" style="font-size:8px;color:var(--dim)">—</span></div><div class="dc-val" id="v-eur"><span style="color:var(--dim);font-size:13px">aguardando...</span></div><div class="dc-sub">Forex · EURUSD=X</div></div>
   <div class="data-cell"><div class="dc-lbl">COT NON-COMM. <span style="font-size:8px;color:var(--dim)">CFTC Semanal</span></div><div class="dc-val pos">+160.145</div><div class="dc-sub">▼ -2 sem. · override ↓</div></div>
-  <div class="data-cell"><div class="dc-lbl">ETF FLOWS GLD/IAU <span style="font-size:8px;color:var(--dim)">WGC Mensal</span></div><div class="dc-val pos">+$5.3Bn</div><div class="dc-sub">Fev/26 · 9 meses inflow ▲</div></div>
-</div>
-
-<!-- ════════════════════════════════════════════════════════════════════
-     MFC — MÓDULO DE FORÇA DE MOEDAS (NOVO)
-     ════════════════════════════════════════════════════════════════════ -->
-<div style="padding:0 18px;margin-bottom:4px">
-  <div style="font-size:9px;font-weight:600;color:var(--purple);letter-spacing:.12em;text-transform:uppercase;display:flex;align-items:center;gap:8px">
-    <span style="width:24px;height:1px;background:var(--purple);opacity:.5;display:inline-block"></span>
-    MÓDULO MFC — FORÇA DAS MOEDAS · 28 PARES · METODOLOGIA MATAF
-    <span style="flex:1;height:1px;background:var(--purple);opacity:.2;display:inline-block"></span>
-    <span style="font-size:8px;color:var(--dim)" id="mfc-ts">—</span>
-    <span style="font-size:8px;padding:1px 6px;border-radius:3px;background:var(--purple3);color:var(--purple);border:1px solid rgba(167,139,250,.3)" id="mfc-pairs-loaded">— / 28</span>
-  </div>
-</div>
-
-<div class="gmfc">
-  <!-- BAR CHART PRINCIPAL -->
-  <div class="panel mfc-panel">
-    <div class="ptitle purple">
-      RANKING DE FORÇA — 8 MOEDAS
-      <span class="psrc">28 pares · % variação média</span>
-    </div>
-    <div id="mfc-bars">
-      <div style="color:var(--dim);font-size:11px;padding:20px 0;text-align:center">Aguardando fetch para calcular MFC...</div>
-    </div>
-  </div>
-
-  <!-- SINAIS MFC -->
-  <div class="panel mfc-panel">
-    <div class="ptitle purple">SINAIS MFC — OPORTUNIDADES</div>
-    <div id="mfc-signals">
-      <div style="color:var(--dim);font-size:11px">Aguardando...</div>
-    </div>
-    <div class="sep"></div>
-    <div class="ptitle purple" style="margin-bottom:6px">USD vs. XAU ANÁLISE</div>
-    <div id="mfc-xau-analysis" style="font-size:11px;color:var(--muted);line-height:1.7">
-      Aguardando dados MFC...
-    </div>
-  </div>
-
-  <!-- HEATMAP 28 PARES -->
-  <div class="panel mfc-panel">
-    <div class="ptitle purple">HEATMAP — TOP 12 PARES</div>
-    <div id="mfc-heatmap">
-      <div style="color:var(--dim);font-size:11px">Aguardando...</div>
-    </div>
-    <div class="sep"></div>
-    <div class="ptitle purple" style="margin-bottom:6px">P6 · USD FORÇA (SCORE)</div>
-    <div id="p6-display" style="font-size:11px;color:var(--muted)">
-      USD strength integrado como P6 no score (peso 10%)
-    </div>
-  </div>
+  <div class="data-cell"><div class="dc-lbl">ETF FLOWS <span style="font-size:8px;color:var(--dim)">WGC Mensal</span></div><div class="dc-val pos">+$5.3Bn</div><div class="dc-sub">Fev/26 · 9 meses ▲</div></div>
 </div>
 
 <!-- PILARES + GEX + ALERTS -->
 <div class="g2l">
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
     <div class="panel">
-      <div class="ptitle">6 PILARES <span class="psrc">AUTO-SCORE + MFC</span></div>
+      <div class="ptitle">6 PILARES <span class="psrc">PONDERADO</span></div>
       <div id="pillar-list">
         <div class="pr"><div class="pdot pd-d"></div><div class="pname">P1 · COT</div><div class="pval">—</div><div class="psig ps-w">—</div></div>
         <div class="pr"><div class="pdot pd-d"></div><div class="pname">P2 · ETF</div><div class="pval">—</div><div class="psig ps-w">—</div></div>
@@ -388,24 +398,24 @@ select.inp{cursor:pointer;appearance:none;padding-right:22px;background-image:ur
       <div id="gex-chart"></div>
       <div class="sep"></div>
       <div style="font-size:10px">
-        <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:var(--muted)">Gamma Flip</span><span style="color:var(--amber);font-weight:600">$5.000–$5.100</span></div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:var(--muted)">Call Wall</span><span style="color:var(--green);font-weight:600">$5.200</span></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Put Wall crítico</span><span style="color:var(--red);font-weight:600">$4.800</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:var(--muted)">Gamma Flip</span><span style="color:var(--amber);font-weight:600" id="gex-flip-val">$5.000–$5.100</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:var(--muted)">Call Wall</span><span style="color:var(--green);font-weight:600" id="gex-cwall-val">$5.200</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Put Wall</span><span style="color:var(--red);font-weight:600" id="gex-pwall-val">$4.800</span></div>
       </div>
     </div>
   </div>
   <div class="panel">
     <div class="ptitle">ALERTAS <span class="psrc">TEMPO REAL</span></div>
-    <div id="alerts-box"><div class="alert info"><div class="at">◎ AGUARDANDO</div>Busque dados para ativar todos os alertas incluindo MFC.</div></div>
+    <div id="alerts-box"><div class="alert info"><div class="at">◎ AGUARDANDO</div>Pressione Buscar Dados para activar alertas.</div></div>
   </div>
 </div>
 
 <!-- MINI STATS -->
 <div class="g4">
-  <div class="panel mstat"><div class="ml">ENTRADA</div><div class="mv pos" id="b-entry">—</div><div class="ms">suporte GEX</div></div>
-  <div class="panel mstat"><div class="ml">STOP LOSS</div><div class="mv neg" id="b-stop">—</div><div class="ms">Gamma Flip</div></div>
-  <div class="panel mstat"><div class="ml">ALVO TP1</div><div class="mv" style="color:var(--blue)" id="b-tp1">—</div><div class="ms">R:R calculado</div></div>
-  <div class="panel mstat"><div class="ml">ALVO TP2</div><div class="mv" style="color:#a78bfa" id="b-tp2">—</div><div class="ms">Call Wall</div></div>
+  <div class="panel mstat"><div class="ml">ENTRADA</div><div class="mv pos" id="b-entry">—</div><div class="ms">zona GEX confirmada</div></div>
+  <div class="panel mstat"><div class="ml">STOP LOSS</div><div class="mv neg" id="b-stop">—</div><div class="ms">abaixo Gamma Flip</div></div>
+  <div class="panel mstat"><div class="ml">TP1 (R:R 1:2)</div><div class="mv" style="color:var(--blue)" id="b-tp1">—</div><div class="ms">Call Wall proximal</div></div>
+  <div class="panel mstat"><div class="ml">TP2 (R:R 1:3)</div><div class="mv" style="color:var(--purple)" id="b-tp2">—</div><div class="ms">Call Wall distal</div></div>
 </div>
 
 <!-- CORRELAÇÕES + CENÁRIOS + OVERRIDES -->
@@ -415,11 +425,11 @@ select.inp{cursor:pointer;appearance:none;padding-right:22px;background-image:ur
     <div id="corr-wrap"></div>
   </div>
   <div class="panel">
-    <div class="ptitle">CENÁRIOS 4H</div>
-    <div id="scen-wrap"><div style="font-size:11px;color:var(--muted)">Aguardando...</div></div>
+    <div class="ptitle">CENÁRIOS PONDERADOS 4H</div>
+    <div id="scen-wrap"><div style="font-size:11px;color:var(--muted)">Aguardando cálculo...</div></div>
   </div>
   <div class="panel">
-    <div class="ptitle">OVERRIDES MANUAIS</div>
+    <div class="ptitle">OVERRIDES MANUAIS <span class="psrc">COT · ETF · GEX</span></div>
     <div class="manual-row"><span class="mlbl">COT Net Long</span><input class="inp inp-sm" type="number" id="m-cot" value="160145" step="500" onchange="compute()"></div>
     <div class="manual-row"><span class="mlbl">COT Δ semanal</span><input class="inp inp-sm" type="number" id="m-cotchg" value="-2000" step="100" onchange="compute()"></div>
     <div class="manual-row"><span class="mlbl">ETF Flows ($Mn)</span><input class="inp inp-sm" type="number" id="m-etf" value="5300" step="100" onchange="compute()"></div>
@@ -434,274 +444,138 @@ select.inp{cursor:pointer;appearance:none;padding-right:22px;background-image:ur
     <div class="sep"></div>
     <div style="font-size:9px;color:var(--muted);margin-bottom:6px">LOG DE SINAIS</div>
     <table class="logt">
-      <thead><tr><th>HORA</th><th>SINAL</th><th>SCORE</th><th>PREÇO</th></tr></thead>
-      <tbody id="log-body"><tr><td colspan="4" style="color:var(--dim);padding:6px">Aguardando...</td></tr></tbody>
+      <thead><tr><th>HORA</th><th>SINAL</th><th>SCORE</th><th>ASSERT.</th><th>PREÇO</th></tr></thead>
+      <tbody id="log-body"><tr><td colspan="5" style="color:var(--dim);padding:6px">Aguardando...</td></tr></tbody>
     </table>
     <button class="compute-btn" onclick="compute()">▶ RECALCULAR SINAL</button>
   </div>
 </div>
 
 <div class="ftr">
-  <span>XAU TERMINAL v8.0 · 6 PILARES + MFC 28 PARES · MATAF METHODOLOGY</span>
+  <span>XAU TERMINAL v10.0 · SMART MONEY · ENTRY PRECISION MODE</span>
   <span>Fontes: Yahoo Finance · FRED · CFTC · WGC · CME</span>
   <span id="last-update">—</span>
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 // STATE
-// ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 const S = { xau:null,dxy:null,wti:null,eur:null,ust:null,tips:null,fed:6600,mfc:null };
 let logEntries=[], countdownSec=0;
 
-const CURRENCY_COLORS = {
-  USD:'#60a5fa', EUR:'#34d399', GBP:'#a78bfa',
-  JPY:'#f87171', CHF:'#fbbf24', CAD:'#f97316',
-  AUD:'#22d3ee', NZD:'#e879f9'
+// ══════════════════════════════════════════════
+// GEX LEVELS — institutional walls
+// These are the zones where Smart Money is positioned
+// ══════════════════════════════════════════════
+const GEX_LEVELS = {
+  callWall:  5200,  // MMs sell here to rebalance delta
+  callWall2: 5400,  // secondary resistance
+  flipLow:   5000,  // gamma flip zone bottom
+  flipHigh:  5100,  // gamma flip zone top
+  putWall:   4950,  // primary support
+  putWall2:  4800,  // critical put wall
+  openAir:   4600,  // below = no institutional support
 };
 
-// ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 // CLOCK
-// ═══════════════════════════════════════════════════════════════════
-function tick() {
-  const n = new Date();
-  document.getElementById('clock').textContent =
-    [n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':') + ' UTC';
-  if (countdownSec > 0) {
+// ══════════════════════════════════════════════
+setInterval(()=>{
+  const n=new Date();
+  document.getElementById('clock').textContent=
+    [n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':')+' UTC';
+  if(countdownSec>0){
     countdownSec--;
-    document.getElementById('countdown').textContent = 'Auto: ' + countdownSec + 's';
-    if (countdownSec === 0) fetchAll();
+    document.getElementById('countdown').textContent='Auto: '+countdownSec+'s';
+    if(countdownSec===0)fetchAll();
   }
-}
-setInterval(tick, 1000);
+},1000);
 
-function chipState(id, s) { const el=document.getElementById(id); if(el) el.className='schip '+(id==='chip-mfc'?'mfc ':'')+s; }
-function fmt(v,d) { return typeof v==='number'?v.toLocaleString('pt-PT',{minimumFractionDigits:d,maximumFractionDigits:d}):'—'; }
+function chipState(id,s){const el=document.getElementById(id);if(el)el.className='schip '+(s||'');}
+function fmt(v,d){return typeof v==='number'?v.toLocaleString('pt-PT',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';}
 
-// ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 // FETCH ALL
-// ═══════════════════════════════════════════════════════════════════
-async function fetchAll() {
-  const btn = document.getElementById('fetch-btn');
-  const ficon = document.getElementById('ficon');
-  const status = document.getElementById('fetch-status');
-  btn.disabled = true;
-  ficon.classList.add('spin');
-  status.innerHTML = '<b>Buscando dados + MFC 28 pares...</b>';
-  ['xau','dxy','wti','eur','ust','tips','fed'].forEach(k => chipState('chip-'+k,'loading'));
-  chipState('chip-mfc','loading');
+// ══════════════════════════════════════════════
+async function fetchAll(){
+  const btn=document.getElementById('fetch-btn');
+  const fi=document.getElementById('ficon');
+  const status=document.getElementById('fetch-status');
+  btn.disabled=true; fi.classList.add('spin');
+  status.innerHTML='<b>Buscando dados de mercado...</b>';
+  ['xau','dxy','wti','eur','ust','tips','fed'].forEach(k=>chipState('chip-'+k,'loading'));
 
-  try {
-    const r = await fetch('/api/all', { signal: AbortSignal.timeout(25000) });
-    if (!r.ok) throw new Error('Server HTTP ' + r.status);
-    const d = await r.json();
+  try{
+    const r=await fetch('/api/all',{signal:AbortSignal.timeout(25000)});
+    if(!r.ok) throw new Error('Server HTTP '+r.status);
+    const d=await r.json();
 
-    let ok=0, fail=0;
-
-    const procYF = (key, data) => {
-      if (!data || data.error) { chipState('chip-'+key,'err'); fail++; return; }
-      const { price, chgPct } = data;
-      const isPos = chgPct >= 0;
-      const col = isPos ? 'var(--green)' : 'var(--red)';
-      const chgTxt = (isPos?'▲ +':'▼ ') + Math.abs(chgPct).toFixed(2)+'%';
-      const prefix = key==='xau'||key==='wti' ? '$' : '';
-      const dec = key==='eur'?4:key==='dxy'?2:0;
-      const el = document.getElementById('v-'+key);
-      if (el) el.innerHTML = `<span style="color:${col}" class="pulse">${prefix}${fmt(price,dec)}</span><span style="font-size:10px;color:${col};margin-left:4px">${chgTxt}</span>`;
-      const ae = document.getElementById('age-'+key); if(ae) ae.textContent='RT';
-      ['tk-'+key,'tk-'+key+'2'].forEach(id => { const e=document.getElementById(id); if(e) e.textContent=prefix+fmt(price,dec); });
-      const tc = document.getElementById('tk-'+key+'-c'); if(tc){tc.textContent=chgTxt;tc.className=isPos?'pos':'neg';}
-      if (key==='xau') S.xau=price; else if(key==='dxy') S.dxy=price;
-      else if(key==='wti') S.wti=price; else if(key==='eur') S.eur=price;
-      chipState('chip-'+key,'ok'); ok++;
+    const procYF=(key,data)=>{
+      if(!data||data.error){chipState('chip-'+key,'err');return;}
+      const{price,chgPct}=data;
+      const isPos=chgPct>=0,col=isPos?'var(--green)':'var(--red)';
+      const chgTxt=(isPos?'▲ +':'▼ ')+Math.abs(chgPct).toFixed(2)+'%';
+      const prefix=key==='xau'||key==='wti'?'$':'';
+      const dec=key==='eur'?4:key==='dxy'?2:0;
+      const el=document.getElementById('v-'+key);
+      if(el)el.innerHTML=`<span style="color:${col}" class="pulse">${prefix}${fmt(price,dec)}</span><span style="font-size:10px;color:${col};margin-left:4px">${chgTxt}</span>`;
+      const ae=document.getElementById('age-'+key);if(ae)ae.textContent='RT';
+      ['tk-'+key,'tk-'+key+'2'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=prefix+fmt(price,dec);});
+      const tc=document.getElementById('tk-'+key+'-c');if(tc){tc.textContent=chgTxt;tc.className=isPos?'pos':'neg';}
+      if(key==='xau')S.xau=price;else if(key==='dxy')S.dxy=price;
+      else if(key==='wti')S.wti=price;else if(key==='eur')S.eur=price;
+      chipState('chip-'+key,'ok');
     };
-
-    const procFRED = (key, data) => {
-      if (!data || data.error) { chipState('chip-'+key,'err'); fail++; return; }
-      const val = data.value;
-      let col='var(--amber)', display;
-      if (key==='tips') { col=val>1.5?'var(--red)':val<0.5?'var(--green)':'var(--amber)'; S.tips=val; display=`<span style="color:${col}" class="pulse">${fmt(val,2)}%</span>`; }
-      else if (key==='ust') { col=val>4.2?'var(--red)':'var(--amber)'; S.ust=val; display=`<span style="color:${col}" class="pulse">${fmt(val,2)}%</span>`; }
-      else if (key==='fed') { S.fed=val/1000; display=`<span style="color:var(--amber)" class="pulse">$${fmt(val/1000,1)}B</span>`; }
+    const procFRED=(key,data)=>{
+      if(!data||data.error){chipState('chip-'+key,'err');return;}
+      const val=data.value;
+      let col='var(--amber)',display;
+      if(key==='tips'){col=val>1.5?'var(--red)':val<0.5?'var(--green)':'var(--amber)';S.tips=val;display=`<span style="color:${col}" class="pulse">${fmt(val,2)}%</span>`;}
+      else if(key==='ust'){col=val>4.2?'var(--red)':'var(--amber)';S.ust=val;display=`<span style="color:${col}" class="pulse">${fmt(val,2)}%</span>`;}
+      else if(key==='fed'){S.fed=val/1000;display=`<span style="color:var(--amber)" class="pulse">$${fmt(val/1000,1)}B</span>`;}
       else display=`<span class="pulse">${fmt(val,2)}</span>`;
-      const el=document.getElementById('v-'+key); if(el) el.innerHTML=display;
-      const ae=document.getElementById('age-'+key); if(ae) ae.textContent='FRED';
+      const el=document.getElementById('v-'+key);if(el)el.innerHTML=display;
+      const ae=document.getElementById('age-'+key);if(ae)ae.textContent='FRED';
       const disp=key==='fed'?'$'+fmt(val/1000,1)+'B':fmt(val,2)+'%';
       ['tk-'+key,'tk-'+key+'2'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=disp;});
-      chipState('chip-'+key,'ok'); ok++;
+      chipState('chip-'+key,'ok');
     };
 
-    procYF('xau', d.xau); procYF('dxy', d.dxy); procYF('wti', d.wti); procYF('eur', d.eur);
-    procFRED('ust', d.ust); procFRED('tips', d.tips); procFRED('fed', d.fed);
+    procYF('xau',d.xau);procYF('dxy',d.dxy);procYF('wti',d.wti);procYF('eur',d.eur);
+    procFRED('ust',d.ust);procFRED('tips',d.tips);procFRED('fed',d.fed);
+    if(d.mfc&&!d.mfc.error)S.mfc=d.mfc;
 
-    // MFC
-    if (d.mfc && !d.mfc.error && d.mfc.ranked) {
-      S.mfc = d.mfc;
-      renderMFC(d.mfc);
-      chipState('chip-mfc','ok');
-      ok++;
-    } else {
-      chipState('chip-mfc','err');
-      document.getElementById('mfc-bars').innerHTML = '<div style="color:var(--red);font-size:11px;padding:10px 0">MFC falhou — verifique servidor</div>';
-      fail++;
-    }
-
-    const n = new Date();
-    const ts = [n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
-    document.getElementById('last-update').textContent = 'Última atualização: ' + ts + ' UTC';
-    status.innerHTML = `<b style="color:var(--green)">✓ ${ok} fontes OK</b>${fail>0?` · <span style="color:var(--red)">${fail} falhas</span>`:''} · MFC: ${d.mfc?.pairsLoaded||0}/28 pares · próximo em 5min`;
-    countdownSec = 300;
-  } catch(e) {
-    status.innerHTML = `<b style="color:var(--red)">Erro: ${e.message}</b>`;
-    ['xau','dxy','wti','eur','ust','tips','fed'].forEach(k=>chipState('chip-'+k,'err'));
-    chipState('chip-mfc','err');
+    const n=new Date();
+    const ts=[n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
+    document.getElementById('last-update').textContent='Actualizado: '+ts+' UTC';
+    status.innerHTML=`<b style="color:var(--green)">✓ Dados carregados</b> · ${ts} UTC`;
+    countdownSec=300;
+  }catch(e){
+    status.innerHTML=`<b style="color:var(--red)">Erro: ${e.message}</b>`;
   }
 
-  btn.disabled = false;
-  ficon.classList.remove('spin');
+  btn.disabled=false; fi.classList.remove('spin');
   compute();
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// RENDER MFC
-// ═══════════════════════════════════════════════════════════════════
-function renderMFC(mfc) {
-  const { ranked, pairs, usdStrength, usdRank, pairsLoaded, ts } = mfc;
-
-  // Update header info
-  document.getElementById('mfc-ts').textContent = ts ? ts.substring(11,16)+' UTC' : '';
-  document.getElementById('mfc-pairs-loaded').textContent = (pairsLoaded||0)+'/28';
-
-  // Ticker updates
-  const top = ranked[0], bot = ranked[ranked.length-1];
-  ['tk-mfc-top','tk-mfc-top2'].forEach(id => { const e=document.getElementById(id); if(e) e.textContent=top.currency; });
-  const tbe = document.getElementById('tk-mfc-bot'); if(tbe) tbe.textContent=bot.currency;
-  const use = document.getElementById('tk-usd-str'); if(use) use.textContent=usdStrength.toFixed(0);
-  const use2 = document.getElementById('tk-usd-str2'); if(use2) use2.textContent=usdStrength.toFixed(0);
-  const ure = document.getElementById('tk-usd-rank'); if(ure){ure.textContent=`#${usdRank}/8`;ure.className=usdRank<=2?'pos':usdRank>=7?'neg':'neu';}
-
-  // BAR CHART
-  const maxStr = Math.max(...ranked.map(r=>r.strength));
-  const barsEl = document.getElementById('mfc-bars');
-  barsEl.innerHTML = ranked.map((r, i) => {
-    const col = CURRENCY_COLORS[r.currency] || '#888';
-    const barW = maxStr > 0 ? (r.strength/100*100).toFixed(1) : 0;
-    const rawSign = r.raw >= 0 ? '+' : '';
-    const strength50 = Math.abs(r.strength - 50);
-    const label = r.strength > 55 ? 'FORTE' : r.strength < 45 ? 'FRACA' : 'NEUTRO';
-    const labelCol = r.strength > 55 ? 'var(--green)' : r.strength < 45 ? 'var(--red)' : 'var(--amber)';
-    return `
-    <div class="mfc-bar-row" style="animation-delay:${i*0.05}s">
-      <div class="mfc-rank">${i+1}</div>
-      <div class="mfc-currency" style="color:${col}">${r.currency}</div>
-      <div class="mfc-bar-wrap">
-        <div class="mfc-bar-fill" style="width:${barW}%;background:${col};opacity:0.75"></div>
-      </div>
-      <div class="mfc-pct" style="color:${col}">${r.strength.toFixed(1)}</div>
-      <div class="mfc-raw">${rawSign}${(r.raw*100).toFixed(2)}bp</div>
-      <div style="font-size:9px;font-weight:600;color:${labelCol};width:42px;text-align:right">${label}</div>
-    </div>`;
-  }).join('');
-
-  // SIGNALS
-  const strongest = ranked[0];
-  const weakest   = ranked[ranked.length-1];
-  const second    = ranked[1];
-  const sweak2    = ranked[ranked.length-2];
-
-  // Best trade: pair strongest vs weakest
-  const pairBuy  = strongest.currency + '/' + weakest.currency;
-  const pairSell = weakest.currency + '/' + strongest.currency;
-  const usdPair  = ranked.find(r=>r.currency==='USD');
-  const eurPair  = ranked.find(r=>r.currency==='EUR');
-  const xauSignal = usdStrength > 60 ? 'USD FORTE → pressão no XAU' : usdStrength < 40 ? 'USD FRACO → suporte ao XAU' : 'USD NEUTRO → XAU sem viés MFC';
-  const xauCol   = usdStrength > 60 ? 'var(--red)' : usdStrength < 40 ? 'var(--green)' : 'var(--amber)';
-
-  document.getElementById('mfc-signals').innerHTML = `
-    <div class="mfc-signal-row">
-      <div class="mfc-sig-card" style="border-color:var(--green)">
-        <div class="sc-lbl">COMPRAR</div>
-        <div class="sc-pair" style="color:var(--green)">${strongest.currency}/${weakest.currency}</div>
-        <div class="sc-why">${strongest.currency} mais forte (${strongest.strength.toFixed(0)}) vs. ${weakest.currency} mais fraca (${weakest.strength.toFixed(0)})</div>
-      </div>
-      <div class="mfc-sig-card" style="border-color:var(--red)">
-        <div class="sc-lbl">VENDER</div>
-        <div class="sc-pair" style="color:var(--red)">${weakest.currency}/${strongest.currency}</div>
-        <div class="sc-why">Máxima divergência de força entre ${strongest.currency} e ${weakest.currency}</div>
-      </div>
-    </div>
-    <div class="mfc-signal-row" style="margin-top:6px">
-      <div class="mfc-sig-card" style="border-color:var(--blue)">
-        <div class="sc-lbl">2ª OPÇÃO</div>
-        <div class="sc-pair" style="color:var(--blue)">${second.currency}/${sweak2.currency}</div>
-        <div class="sc-why">${second.currency} (${second.strength.toFixed(0)}) vs. ${sweak2.currency} (${sweak2.strength.toFixed(0)})</div>
-      </div>
-      <div class="mfc-sig-card" style="border-color:${xauCol}">
-        <div class="sc-lbl">IMPACTO XAU</div>
-        <div class="sc-pair" style="color:${xauCol};font-size:11px">${xauSignal}</div>
-        <div class="sc-why">USD rank #${usdRank}/8 · força ${usdStrength.toFixed(0)}/100</div>
-      </div>
-    </div>`;
-
-  // XAU analysis
-  const xauAnalysis = usdStrength > 65
-    ? `<span style="color:var(--red)">⚠ USD muito forte (${usdStrength.toFixed(0)}/100, rank #${usdRank}).</span> MFC confirma pressão baixista no ouro. Correlação DXY-XAU ativa (-0.78). Aguardar enfraquecimento do USD antes de entrar long.`
-    : usdStrength < 35
-    ? `<span style="color:var(--green)">✓ USD fraco (${usdStrength.toFixed(0)}/100, rank #${usdRank}).</span> MFC favorável ao ouro. Capital migra para ativos alternativos. Confirma sinal de compra se TIPS e COT alinhados.`
-    : `<span style="color:var(--amber)">→ USD neutro (${usdStrength.toFixed(0)}/100, rank #${usdRank}).</span> MFC sem viés claro para XAU. Aguardar confirmação de outros pilares antes de entrar.`;
-  document.getElementById('mfc-xau-analysis').innerHTML = xauAnalysis;
-
-  // HEATMAP top 12 pairs by absolute move
-  const topPairs = (pairs||[])
-    .filter(p => p.chgPct !== undefined)
-    .sort((a,b) => Math.abs(b.chgPct) - Math.abs(a.chgPct))
-    .slice(0,12);
-
-  document.getElementById('mfc-heatmap').innerHTML = `<div class="heat-grid">${
-    topPairs.map(p => {
-      const isPos = p.chgPct >= 0;
-      const intensity = Math.min(Math.abs(p.chgPct) / 0.5, 1);
-      const bg = isPos
-        ? `rgba(25,230,160,${0.08 + intensity*0.2})`
-        : `rgba(255,77,109,${0.08 + intensity*0.2})`;
-      const col = isPos ? 'var(--green)' : 'var(--red)';
-      const name = p.ticker.replace('=X','').replace('%3D','');
-      return `<div class="heat-cell" style="background:${bg}">
-        <div class="heat-ticker">${name.substring(0,6)}</div>
-        <div class="heat-val" style="color:${col}">${isPos?'+':''}${p.chgPct.toFixed(2)}%</div>
-      </div>`;
-    }).join('')
-  }</div>`;
-
-  // P6 display
-  const p6Color = usdStrength > 60 ? 'var(--red)' : usdStrength < 40 ? 'var(--green)' : 'var(--amber)';
-  document.getElementById('p6-display').innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-      <div style="font-size:20px;font-weight:600;color:${p6Color}">${usdStrength.toFixed(0)}</div>
-      <div>
-        <div style="font-size:9px;color:var(--muted)">USD FORÇA / 100</div>
-        <div style="font-size:10px;color:${p6Color}">Rank #${usdRank} de 8</div>
-      </div>
-    </div>
-    <div style="height:5px;background:var(--bg3);border-radius:2px;overflow:hidden">
-      <div style="width:${usdStrength}%;height:100%;background:${p6Color};border-radius:2px;transition:width .8s"></div>
-    </div>
-    <div style="font-size:9px;color:var(--dim);margin-top:4px">USD forte = bearish XAU · USD fraco = bullish XAU</div>`;
-}
-
-// ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 // GEX CHART
-// ═══════════════════════════════════════════════════════════════════
-const GEX=[
-  {px:'$5.500',c:90,p:5,lbl:'',wall:''},{px:'$5.400',c:70,p:8,lbl:'',wall:''},
-  {px:'$5.300',c:55,p:25,lbl:'',wall:''},{px:'$5.200',c:185,p:40,lbl:'★ CALL WALL',wall:'call'},
-  {px:'$5.100',c:95,p:55,lbl:'Flip zone',wall:'flip'},{px:'$5.000',c:45,p:110,lbl:'★ PUT WALL',wall:'put'},
-  {px:'$4.950',c:25,p:95,lbl:'',wall:''},{px:'$4.800',c:10,p:140,lbl:'★ PUT crítico',wall:'put2'},
+// ══════════════════════════════════════════════
+const GEX_STRIKES=[
+  {px:'$5.500',c:90,p:5,lbl:'',wall:''},
+  {px:'$5.400',c:70,p:8,lbl:'',wall:''},
+  {px:'$5.300',c:55,p:25,lbl:'',wall:''},
+  {px:'$5.200',c:185,p:40,lbl:'★ CALL WALL',wall:'call'},
+  {px:'$5.100',c:95,p:55,lbl:'Flip zone',wall:'flip'},
+  {px:'$5.000',c:45,p:110,lbl:'★ PUT WALL',wall:'put'},
+  {px:'$4.950',c:25,p:95,lbl:'',wall:''},
+  {px:'$4.800',c:10,p:140,lbl:'★ PUT crítico',wall:'put2'},
   {px:'$4.600',c:5,p:75,lbl:'',wall:''},
 ];
 function renderGEX(){
   const spot=S.xau||5019,max=200;
-  document.getElementById('gex-chart').innerHTML=GEX.map(d=>{
+  document.getElementById('gex-chart').innerHTML=GEX_STRIKES.map(d=>{
     const cw=Math.round(d.c/max*44),pw=Math.round(d.p/max*44);
     const isSpot=(d.px==='$5.000'&&spot>=4950&&spot<=5050)||(d.px==='$5.100'&&spot>5050&&spot<=5150);
     const pc=d.wall==='call'?'var(--green)':d.wall==='put'||d.wall==='put2'?'var(--red)':d.wall==='flip'?'var(--amber)':'var(--muted)';
@@ -714,78 +588,263 @@ function renderGEX(){
 }
 
 function renderCorr(){
-  const items=[{n:'DXY Index',c:-0.78},{n:'TIPS 10Y',c:-0.82},{n:'UST 10Y',c:-0.61},{n:'ETF GLD',c:+0.74},{n:'WTI',c:+0.42},{n:'COT Net Long',c:+0.69},{n:'FED Balance',c:+0.85},{n:'EUR/USD',c:+0.31},{n:'USD MFC Strength',c:-0.76}];
+  const items=[
+    {n:'DXY Index',c:-0.78},{n:'TIPS 10Y',c:-0.82},{n:'UST 10Y',c:-0.61},
+    {n:'ETF GLD',c:+0.74},{n:'WTI',c:+0.42},{n:'COT Net Long',c:+0.69},
+    {n:'FED Balance',c:+0.85},{n:'EUR/USD',c:+0.31},{n:'USD MFC Str.',c:-0.76}
+  ];
   document.getElementById('corr-wrap').innerHTML=items.map(it=>{
     const pct=Math.abs(it.c)*100,col=it.c>0?'var(--green)':'var(--red)',bg=it.c>0?'rgba(25,230,160,.35)':'rgba(255,77,109,.35)';
     return `<div class="corr-row"><div class="corr-n">${it.n}</div><div class="corr-track"><div class="corr-f" style="width:${pct}%;background:${bg}"></div></div><div class="corr-v" style="color:${col}">${(it.c>0?'+':'')}${it.c.toFixed(2)}</div></div>`;
   }).join('');
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// COMPUTE — 6 PILARES (P6 = USD MFC strength)
-// ═══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════
+// COMPUTE — REFINED ENGINE v10
+//
+// Signal logic:
+// 1. Score 0–100 from 6 weighted pillars
+// 2. Determine signal zone: BUY / SELL / WATCH / WAIT
+// 3. Find EXACT entry level based on GEX walls
+// 4. Calculate assertiveness % from pillar alignment
+// 5. WATCH mode: tell user what price to wait for
+// ══════════════════════════════════════════════
 function compute(){
-  const spot=S.xau||5019, ust=S.ust||4.27, tips=S.tips||1.88, fed=S.fed||6600;
-  const cot=parseInt(document.getElementById('m-cot').value)||160145;
-  const cotChg=parseInt(document.getElementById('m-cotchg').value)||-2000;
-  const etf=parseFloat(document.getElementById('m-etf').value)||5300;
-  const gex=document.getElementById('m-gex').value;
-  const rr=parseFloat(document.getElementById('m-rr').value)||2.0;
-  const usdStr = S.mfc ? S.mfc.usdStrength : 50; // 0-100
+  const spot   = S.xau  || 5019;
+  const ust    = S.ust  || 4.27;
+  const tips   = S.tips || 1.88;
+  const fed    = S.fed  || 6600;
+  const cot    = parseInt(document.getElementById('m-cot').value)    || 160145;
+  const cotChg = parseInt(document.getElementById('m-cotchg').value) || -2000;
+  const etf    = parseFloat(document.getElementById('m-etf').value)  || 5300;
+  const gex    = document.getElementById('m-gex').value;
+  const rr     = parseFloat(document.getElementById('m-rr').value)   || 2.0;
+  const usdStr = S.mfc ? S.mfc.usdStrength : 50;
 
-  // Scores (0-20 each)
+  // ── PILLAR SCORES (0-20 each) ───────────────
   let p1=10;
-  if(cotChg>2000&&cot>150000)p1=19;else if(cotChg>0&&cot>120000)p1=15;
-  else if(cotChg<-3000)p1=3;else if(cotChg<-1000)p1=7;
+  if(cotChg>2000&&cot>150000)p1=19;
+  else if(cotChg>0&&cot>120000)p1=15;
+  else if(cotChg<-3000)p1=3;
+  else if(cotChg<-1000)p1=7;
   if(cot>210000)p1=Math.max(p1-4,2);
+
   const p2=etf>4000?18:etf>1500?14:etf<0?2:etf<500?6:10;
   const p3=tips<0?19:tips<0.5?17:tips<1.0?14:tips<1.5?11:tips<2.0?7:tips<2.5?4:2;
   const p4=fed>8500?18:fed>7500?15:fed>7000?12:fed<6000?5:10;
   const p5=gex==='long'?17:gex==='flip'?10:4;
-  // P6: USD MFC — INVERSO (USD forte = bearish XAU = score baixo)
   const p6=usdStr<30?18:usdStr<40?15:usdStr<50?12:usdStr<60?9:usdStr<70?6:3;
 
-  // Weighted: TIPS 22%, COT 18%, ETF 18%, GEX 18%, FED 14%, MFC USD 10%
+  // Weighted score
   const score=Math.min(100,Math.max(0,Math.round(
     (p3*0.22)+(p1*0.18)+(p2*0.18)+(p5*0.18)+(p4*0.14)+(p6*0.10))*5
   ));
 
-  const diverge=(gex==='long'||(gex==='flip'&&spot>5050))&&(tips>1.5||cotChg<-1500);
-  let signal,conf;
-  if(diverge){signal='AGUARDAR';conf=Math.min(94,Math.round(40+score/10));}
-  else if(score>=62){signal='COMPRAR';conf=Math.min(94,Math.round(50+(score-62)*1.5));}
-  else if(score<=35){signal='VENDER';conf=Math.min(94,Math.round(50+(35-score)*1.8));}
-  else{signal='AGUARDAR';conf=Math.min(94,Math.round(40+Math.abs(score-50)));}
+  // Count bullish pillars (>= 14) and bearish (<= 7)
+  const scores=[p1,p2,p3,p4,p5,p6];
+  const bullPillars = scores.filter(s=>s>=14).length;
+  const bearPillars = scores.filter(s=>s<=7).length;
+  const neutralPillars = 6 - bullPillars - bearPillars;
 
-  const sd=Math.round(spot*0.006);
-  let entry=null,stop=null,tp1=null,tp2=null;
-  if(signal==='COMPRAR'){entry=spot;stop=spot-sd;tp1=spot+Math.round(sd*rr);tp2=spot+Math.round(sd*rr*1.5);}
-  else if(signal==='VENDER'){entry=spot;stop=spot+sd;tp1=spot-Math.round(sd*rr);tp2=spot-Math.round(sd*rr*1.5);}
+  // ── DIVERGENCE CHECK ───────────────────────
+  const gexBull = gex==='long'||(gex==='flip'&&spot>GEX_LEVELS.flipHigh);
+  const gexBear = gex==='short'||(gex==='flip'&&spot<GEX_LEVELS.flipLow);
+  const tipsBear = tips > 1.5;
+  const cotBear  = cotChg < -1500;
+  const usdStrBull = usdStr > 65; // strong USD = bearish XAU
+  const diverge  = gexBull && (tipsBear || cotBear);
 
-  const ac=signal==='COMPRAR'?'var(--green)':signal==='VENDER'?'var(--red)':'var(--amber)';
-  document.getElementById('sig-banner').className='sig-banner '+(signal==='COMPRAR'?'buy':signal==='VENDER'?'sell':'wait');
-  document.getElementById('sig-label').textContent={COMPRAR:'▲ COMPRAR',VENDER:'▼ VENDER',AGUARDAR:'⬤ AGUARDAR'}[signal];
-  document.getElementById('sig-conf').textContent=conf+'%';
-  document.getElementById('sig-div').textContent=diverge?'GEX vs. TIPS/COT':score>60?'BULLISH':'BEARISH/MISTO';
-  document.getElementById('sig-regime').textContent=gex==='long'?'LONG GAMMA':gex==='flip'?'GAMMA FLIP':'SHORT GAMMA';
-  document.getElementById('sig-usd').textContent=S.mfc?`${usdStr.toFixed(0)}/100 #${S.mfc.usdRank}`:'—';
-  document.getElementById('sl-entry').textContent=entry?'$'+entry.toLocaleString('pt-PT'):'—';
-  document.getElementById('sl-stop').textContent=stop?'$'+stop.toLocaleString('pt-PT'):'—';
-  document.getElementById('sl-tp').textContent=tp1?'$'+tp1.toLocaleString('pt-PT'):'—';
-  document.getElementById('score-arc').style.strokeDashoffset=157-(score/100)*157;
-  document.getElementById('score-arc').style.stroke=ac;
-  document.getElementById('score-num').textContent=score;
-  document.getElementById('score-bar').style.width=score+'%';document.getElementById('score-bar').style.background=ac;
-  document.getElementById('score-pct').textContent=score+'/100';document.getElementById('score-pct').style.color=ac;
-  document.getElementById('b-entry').textContent=entry?'$'+entry.toLocaleString('pt-PT'):'—';
-  document.getElementById('b-stop').textContent=stop?'$'+stop.toLocaleString('pt-PT'):'—';
-  document.getElementById('b-tp1').textContent=tp1?'$'+tp1.toLocaleString('pt-PT'):'—';
-  document.getElementById('b-tp2').textContent=tp2?'$'+tp2.toLocaleString('pt-PT'):'—';
+  // ── WHERE IS SPOT relative to GEX walls ───
+  const G = GEX_LEVELS;
+  const aboveCallWall   = spot >= G.callWall;
+  const inCallZone      = spot >= G.flipHigh && spot < G.callWall;
+  const inFlipZone      = spot >= G.flipLow  && spot < G.flipHigh;
+  const atPutWall       = spot >= G.putWall   && spot < G.flipLow;
+  const atCriticalPut   = spot >= G.putWall2  && spot < G.putWall;
+  const belowAll        = spot < G.putWall2;
 
-  // 6 pillars
+  // ── SIGNAL DETERMINATION ─────────────────
+  // v10 logic: price must come TO you, not chase
+  let signal, watchMode=false, watchPrice=null, watchDir=null;
+  let assertPct=0, entryPrice=null, stopPrice=null, tp1Price=null, tp2Price=null;
+  let signalReason='';
+  let stopDist=0;
+
+  if (diverge) {
+    // Divergence — always WAIT regardless of score
+    signal = 'WAIT';
+    signalReason = `<b>Divergência activa:</b> GEX sinaliza ${gexBull?'compra':'venda'} mas TIPS (${tips.toFixed(2)}%) e COT (Δ${cotChg.toLocaleString()}) contradizem. Risco de fakeout elevado. Aguarde resolução antes de entrar.`;
+    assertPct = 20;
+
+  } else if (score >= 65 && bullPillars >= 4) {
+    // STRONG BUY — minimum 4 bull pillars + score >= 65
+    if (spot <= G.putWall + 30) {
+      // Price is AT the buy zone — enter now
+      signal = 'BUY';
+      entryPrice = spot;
+      stopDist   = Math.round(spot * 0.005);
+      stopPrice  = spot - stopDist;
+      tp1Price   = Math.round(G.flipLow);      // gamma flip
+      tp2Price   = Math.round(G.callWall);     // call wall
+      assertPct  = Math.round(50 + bullPillars * 7 + (score-65)*0.5);
+      signalReason = `<b>Compra institucional confirmada:</b> ${bullPillars}/6 pilares bullish. Spot em zona de Put Wall ($${G.putWall.toLocaleString()}). MMs compram para rebalancear delta — suporte mecânico activo. TIPS ${tips.toFixed(2)}% ainda hostil mas ${bullPillars} pilares sobrepõem.`;
+    } else {
+      // Price NOT at buy zone yet — WATCH
+      signal = 'WATCH';
+      watchMode  = true;
+      watchPrice = G.putWall;
+      watchDir   = 'compra';
+      stopDist   = Math.round(G.putWall * 0.005);
+      stopPrice  = G.putWall - stopDist;
+      tp1Price   = Math.round(G.flipLow);
+      tp2Price   = Math.round(G.callWall);
+      assertPct  = Math.round(45 + bullPillars * 6);
+      signalReason = `<b>Fundamentos bullish mas preço fora da zona.</b> ${bullPillars}/6 pilares confirmam alta. Aguarde o preço descer até a zona de Put Wall antes de entrar. Não corra atrás — o preço vem até si.`;
+    }
+
+  } else if (score <= 35 && bearPillars >= 4) {
+    // STRONG SELL — minimum 4 bear pillars + score <= 35
+    if (spot >= G.callWall - 30) {
+      // Price is AT the sell zone — enter now
+      signal = 'SELL';
+      entryPrice = spot;
+      stopDist   = Math.round(spot * 0.005);
+      stopPrice  = spot + stopDist;
+      tp1Price   = Math.round(G.flipHigh);     // gamma flip top
+      tp2Price   = Math.round(G.putWall);      // put wall
+      assertPct  = Math.round(50 + bearPillars * 7 + (35-score)*0.5);
+      signalReason = `<b>Venda institucional confirmada:</b> ${bearPillars}/6 pilares bearish. Spot em zona de Call Wall ($${G.callWall.toLocaleString()}). MMs vendem para rebalancear delta — resistência mecânica activa. USD forte (rank #${S.mfc?.usdRank||'—'}) confirma pressão.`;
+    } else {
+      // Price NOT at sell zone yet — WATCH
+      signal = 'WATCH';
+      watchMode  = true;
+      watchPrice = G.callWall;
+      watchDir   = 'venda';
+      stopDist   = Math.round(G.callWall * 0.005);
+      stopPrice  = G.callWall + stopDist;
+      tp1Price   = Math.round(G.flipHigh);
+      tp2Price   = Math.round(G.putWall);
+      assertPct  = Math.round(45 + bearPillars * 6);
+      signalReason = `<b>Fundamentos bearish mas preço fora da zona.</b> ${bearPillars}/6 pilares confirmam queda. Aguarde o preço subir até Call Wall antes de entrar short. Não corra — deixe o preço vir até si.`;
+    }
+
+  } else if (score >= 55 && bullPillars >= 3 && !gexBear) {
+    // MODERATE BUY — watch for entry
+    signal = 'WATCH';
+    watchMode  = true;
+    watchPrice = atPutWall ? G.putWall2 : G.putWall;
+    watchDir   = 'compra';
+    stopDist   = Math.round(watchPrice * 0.005);
+    stopPrice  = watchPrice - stopDist;
+    tp1Price   = Math.round(G.flipLow);
+    tp2Price   = Math.round(G.flipHigh);
+    assertPct  = Math.round(38 + bullPillars * 6);
+    signalReason = `<b>Sinal moderado de compra.</b> ${bullPillars}/6 pilares bullish. Aguarde confirmação na zona Put Wall $${watchPrice.toLocaleString()} antes de entrar. Score ${score}/100 — não é forte o suficiente para entrada imediata.`;
+
+  } else if (score <= 45 && bearPillars >= 3 && !gexBull) {
+    // MODERATE SELL — watch for entry
+    signal = 'WATCH';
+    watchMode  = true;
+    watchPrice = G.callWall;
+    watchDir   = 'venda';
+    stopDist   = Math.round(watchPrice * 0.005);
+    stopPrice  = watchPrice + stopDist;
+    tp1Price   = Math.round(G.flipHigh);
+    tp2Price   = Math.round(G.putWall);
+    assertPct  = Math.round(38 + bearPillars * 6);
+    signalReason = `<b>Sinal moderado de venda.</b> ${bearPillars}/6 pilares bearish. Aguarde Call Wall $${watchPrice.toLocaleString()} para entrar short. Score ${score}/100 — aguarde confirmação adicional.`;
+
+  } else {
+    // NO SIGNAL — market undecided
+    signal = 'WAIT';
+    assertPct  = 15;
+    const nextBuyZone  = G.putWall;
+    const nextSellZone = G.callWall;
+    const distToBuy    = Math.abs(spot - nextBuyZone);
+    const distToSell   = Math.abs(spot - nextSellZone);
+    if (distToBuy < distToSell) {
+      signalReason = `<b>Mercado sem consenso institucional.</b> Score ${score}/100 — pilares mistos (${bullPillars} bull, ${bearPillars} bear). Zona de compra mais próxima: $${nextBuyZone.toLocaleString()}. Aguarde alinhamento de pelo menos 4 pilares antes de entrar.`;
+    } else {
+      signalReason = `<b>Mercado sem consenso institucional.</b> Score ${score}/100 — pilares mistos (${bullPillars} bull, ${bearPillars} bear). Zona de venda mais próxima: $${nextSellZone.toLocaleString()}. Aguarde alinhamento de pelo menos 4 pilares antes de entrar.`;
+    }
+  }
+
+  assertPct = Math.min(92, Math.max(10, assertPct));
+  const rrCalc = entryPrice && stopPrice && tp1Price
+    ? +(Math.abs(tp1Price-entryPrice)/Math.abs(stopPrice-entryPrice)).toFixed(1)
+    : rr;
+
+  // ── UPDATE SIGNAL CARD ─────────────────────
+  const card = document.getElementById('signal-card');
+  const cls  = signal==='BUY'?'buy':signal==='SELL'?'sell':signal==='WATCH'?'watch':'wait';
+  card.className='signal-card '+cls;
+
+  const labels={BUY:'▲ COMPRAR AGORA',SELL:'▼ VENDER AGORA',WATCH:'👁 AGUARDAR ZONA',WAIT:'⬤ SEM SINAL'};
+  document.getElementById('sc-label').textContent=labels[signal];
+  document.getElementById('sc-reason').innerHTML=signalReason;
+
+  // Entry levels
+  const fmtPx=v=>v?'$'+v.toLocaleString('pt-PT'):'—';
+  document.getElementById('sc-entry').textContent=fmtPx(entryPrice||watchPrice);
+  document.getElementById('sc-entry-sub').textContent=signal==='WATCH'?'aguardar este preço':signal==='BUY'||signal==='SELL'?'entrar agora':'—';
+  document.getElementById('sc-stop').textContent=fmtPx(stopPrice);
+  document.getElementById('sc-stop-sub').textContent=stopPrice?`-${stopDist.toLocaleString('pt-PT')} pts`:'—';
+  document.getElementById('sc-tp1').textContent=fmtPx(tp1Price);
+  document.getElementById('sc-tp1-sub').textContent=tp1Price&&entryPrice?`+${Math.abs(tp1Price-(entryPrice||watchPrice)).toLocaleString('pt-PT')} pts`:'—';
+  document.getElementById('sc-tp2').textContent=fmtPx(tp2Price);
+  document.getElementById('sc-tp2-sub').textContent=tp2Price&&entryPrice?`+${Math.abs(tp2Price-(entryPrice||watchPrice)).toLocaleString('pt-PT')} pts`:'—';
+
+  // Ring
+  const ringArc=document.getElementById('ring-arc');
+  const offset=201-(assertPct/100)*201;
+  ringArc.style.strokeDashoffset=offset;
+  const ac=signal==='BUY'?'var(--green)':signal==='SELL'?'var(--red)':signal==='WATCH'?'var(--blue)':'var(--amber)';
+  ringArc.style.stroke=ac;
+  document.getElementById('ring-pct').textContent=assertPct+'%';
+  document.getElementById('pillars-count').textContent=`${bullPillars}↑ ${bearPillars}↓ ${neutralPillars}→ / 6`;
+
+  // Bottom strip
+  document.getElementById('sc-assert').textContent=assertPct+'%';
+  document.getElementById('sc-assert').style.color=assertPct>=70?'var(--green)':assertPct>=50?'var(--amber)':'var(--red)';
+  document.getElementById('sc-assert-sub').textContent=`${bullPillars>bearPillars?bullPillars:bearPillars}/6 pilares`;
+  document.getElementById('sc-rr').textContent='1:'+rrCalc;
+  document.getElementById('sc-regime').textContent=gex==='long'?'LONG GAMMA':gex==='flip'?'GAMMA FLIP':'SHORT GAMMA';
+  document.getElementById('sc-div').textContent=diverge?'⚠ ACTIVA':'✓ OK';
+  document.getElementById('sc-div').style.color=diverge?'var(--red)':'var(--green)';
+  document.getElementById('sc-div-sub').textContent=diverge?'não entrar':'pilares alinhados';
+
+  // WATCH BAR
+  const watchBar=document.getElementById('watch-bar');
+  const watchMsg=document.getElementById('watch-msg');
+  const watchPriceEl=document.getElementById('watch-price');
+  if(watchMode&&watchPrice){
+    watchBar.style.display='flex';
+    const dir=watchDir==='compra'?'compra':'venda';
+    const spotDist=Math.abs(spot-watchPrice);
+    watchMsg.innerHTML=`<b>Aguarde o preço $${watchPrice.toLocaleString('pt-PT')}</b> — melhor ponto de entrada para <b>${dir}</b>. Preço actual ${spot>watchPrice?'acima':'abaixo'} por $${spotDist.toLocaleString('pt-PT')}. Não entre antes desta zona.`;
+    watchPriceEl.textContent='$'+watchPrice.toLocaleString('pt-PT');
+    watchPriceEl.style.color=watchDir==='compra'?'var(--green)':'var(--red)';
+  }else{
+    watchBar.style.display='none';
+  }
+
+  // Score bar + pct
+  const scoreCol=signal==='BUY'?'var(--green)':signal==='SELL'?'var(--red)':'var(--amber)';
+  document.getElementById('score-bar').style.width=score+'%';
+  document.getElementById('score-bar').style.background=scoreCol;
+  document.getElementById('score-pct').textContent=score+'/100';
+  document.getElementById('score-pct').style.color=scoreCol;
+
+  // Mini stats
+  document.getElementById('b-entry').textContent=fmtPx(entryPrice||watchPrice);
+  document.getElementById('b-entry').style.color=signal==='SELL'?'var(--red)':'var(--green)';
+  document.getElementById('b-stop').textContent=fmtPx(stopPrice);
+  document.getElementById('b-tp1').textContent=fmtPx(tp1Price);
+  document.getElementById('b-tp2').textContent=fmtPx(tp2Price);
+
+  // Pillars
   const sigOf=s=>s>=14?['pd-g','ps-b','BULL']:s<=7?['pd-r','ps-s','BEAR']:['pd-a','ps-w','NEU'];
   const p5s=gex==='long'?['pd-g','ps-b','BULL']:gex==='flip'?['pd-a','ps-w','FLIP']:['pd-r','ps-s','BEAR'];
-  const p6s=p6>=14?['pd-g','ps-b','BULL']:p6<=7?['pd-r','ps-s','BEAR']:['pd-a','ps-w','NEU'];
   const vc=cls=>cls==='pd-g'?'var(--green)':cls==='pd-r'?'var(--red)':'var(--amber)';
   const rows=[
     {n:'P1 · COT',v:cot.toLocaleString('pt-PT'),s:sigOf(p1)},
@@ -793,41 +852,56 @@ function compute(){
     {n:'P3 · TIPS',v:tips.toFixed(2)+'%',s:sigOf(p3)},
     {n:'P4 · FED',v:'$'+fed.toLocaleString('pt-PT',{maximumFractionDigits:0})+'B',s:sigOf(p4)},
     {n:'P5 · GEX',v:gex==='long'?'Long Gamma':gex==='flip'?'Flip Zone':'Short Gamma',s:p5s},
-    {n:'P6 · USD MFC',v:S.mfc?`${usdStr.toFixed(0)}/100 #${S.mfc.usdRank}`:'aguardando',s:p6s},
+    {n:'P6 · USD MFC',v:S.mfc?`${S.mfc.usdStrength.toFixed(0)}/100 #${S.mfc.usdRank}`:'aguardando',s:sigOf(p6)},
   ];
   document.getElementById('pillar-list').innerHTML=rows.map(r=>`
     <div class="pr"><div class="pdot ${r.s[0]}"></div><div class="pname">${r.n}</div><div class="pval" style="color:${vc(r.s[0])}">${r.v}</div><div class="psig ${r.s[1]}">${r.s[2]}</div></div>`).join('');
 
-  // Alerts
-  const al=[];
-  if(diverge)al.push({t:'crit',title:'⚠ DIVERGÊNCIA CRÍTICA',body:`GEX sinaliza compra mas TIPS(${tips.toFixed(2)}%) e COT(Δ${cotChg.toLocaleString()}) contradizem. Fakeout provável.`});
-  if(S.mfc&&usdStr>65)al.push({t:'mfc-alert',title:`◈ MFC: USD FORTE (${usdStr.toFixed(0)}/100 · #${S.mfc.usdRank})`,body:`USD é ${S.mfc.usdRank===1?'a moeda mais forte':'das mais fortes'} nos 28 pares. Pressão estrutural sobre XAU via correlação DXY (-0.78). Confirma viés baixista.`});
-  if(S.mfc&&usdStr<35)al.push({t:'good',title:`◎ MFC: USD FRACO (${usdStr.toFixed(0)}/100 · #${S.mfc.usdRank})`,body:`USD nas posições mais fracas. Capital a migrar para ativos alternativos incluindo ouro. MFC confirma viés bullish.`});
-  if(gex==='short')al.push({t:'warn',title:'◈ SHORT GAMMA — VOL AMPLIFICADA',body:`Stop obrigatório: $${(spot-sd).toLocaleString('pt-PT')}.`});
-  if(tips>1.8)al.push({t:'crit',title:`⚠ TIPS ${tips.toFixed(2)}% — HOSTIL`,body:`Custo de oportunidade crescente. Correlação inversa -0.82 activa.`});
-  else if(tips<1.0)al.push({t:'good',title:'◎ TIPS FAVORÁVEL',body:`Real yield abaixo de 1% — positivo para XAU.`});
-  if(cotChg>2000)al.push({t:'good',title:'◎ COT — ACUMULAÇÃO',body:`+${cotChg.toLocaleString()} contratos net long. Smart Money comprando.`});
-  al.push({t:'info',title:'◎ FOMC 17–19 MAR',body:'Dot Plot = catalisador. Stop ajustado obrigatório pré-evento.'});
-  document.getElementById('alerts-box').innerHTML=al.map(a=>`<div class="alert ${a.t}"><div class="at">${a.title}</div>${a.body}</div>`).join('');
+  // Regime badge
+  const rb=document.getElementById('regime-badge');
+  rb.className='rbadge '+(gex==='long'?'rb-long':gex==='flip'?'rb-flip':'rb-short');
+  rb.textContent=gex==='long'?'LONG GAMMA':gex==='flip'?'GAMMA FLIP':'SHORT GAMMA';
 
-  const rb=document.getElementById('regime-badge');rb.className='rbadge '+(gex==='long'?'rb-long':gex==='flip'?'rb-flip':'rb-short');rb.textContent=gex==='long'?'LONG GAMMA':gex==='flip'?'GAMMA FLIP':'SHORT GAMMA';
   renderGEX();
 
+  // Alerts
+  const al=[];
+  if(diverge)al.push({t:'crit',title:'⚠ DIVERGÊNCIA — NÃO ENTRAR',body:`GEX diz ${gexBull?'compra':'venda'} mas ${tipsBear?'TIPS '+tips.toFixed(2)+'%':''} ${cotBear?'COT -'+Math.abs(cotChg):''} contradizem. Probabilidade de fakeout muito elevada.`});
+  if(signal==='BUY')al.push({t:'good',title:`▲ COMPRAR · ${assertPct}% assertividade`,body:`Entrada: $${entryPrice?.toLocaleString('pt-PT')||'—'} · Stop: $${stopPrice?.toLocaleString('pt-PT')||'—'} · TP1: $${tp1Price?.toLocaleString('pt-PT')||'—'} · R:R 1:${rrCalc}. ${bullPillars}/6 pilares confirmam.`});
+  if(signal==='SELL')al.push({t:'crit',title:`▼ VENDER · ${assertPct}% assertividade`,body:`Entrada: $${entryPrice?.toLocaleString('pt-PT')||'—'} · Stop: $${stopPrice?.toLocaleString('pt-PT')||'—'} · TP1: $${tp1Price?.toLocaleString('pt-PT')||'—'} · R:R 1:${rrCalc}. ${bearPillars}/6 pilares confirmam.`});
+  if(signal==='WATCH')al.push({t:'info',title:`👁 AGUARDAR $${watchPrice?.toLocaleString('pt-PT')} para ${watchDir}`,body:`Fundamentos ${watchDir==='compra'?'bullish':'bearish'} com ${watchDir==='compra'?bullPillars:bearPillars}/6 pilares. Preço actual $${spot.toLocaleString('pt-PT')} — ${Math.abs(spot-(watchPrice||spot)).toLocaleString('pt-PT')} pts de distância da zona de entrada.`});
+  if(gex==='short')al.push({t:'warn',title:'◈ SHORT GAMMA — VOL AMPLIFICADA',body:`Stop obrigatório: $${stopPrice?.toLocaleString('pt-PT')||'—'}. Cada movimento é amplificado pelos MMs.`});
+  if(tips>1.8)al.push({t:'crit',title:`⚠ TIPS ${tips.toFixed(2)}% — CUSTO OPORTUNIDADE ALTO`,body:`Correlação inversa -0.82 activa. Capital institucional prefere Treasuries.`});
+  else if(tips<1.0)al.push({t:'good',title:'◎ TIPS FAVORÁVEL',body:`Real yield abaixo de 1% — positivo para XAU.`});
+  document.getElementById('alerts-box').innerHTML=al.map(a=>`<div class="alert ${a.t}"><div class="at">${a.title}</div>${a.body}</div>`).join('');
+
+  // Scenarios
+  const buyProb=signal==='BUY'?60:signal==='WATCH'&&watchDir==='compra'?40:signal==='SELL'?10:25;
+  const sellProb=signal==='SELL'?60:signal==='WATCH'&&watchDir==='venda'?40:signal==='BUY'?10:30;
+  const latProb=100-buyProb-sellProb;
   document.getElementById('scen-wrap').innerHTML=[
-    {l:signal==='COMPRAR'?'BASE ALTISTA':'ALTISTA',p:signal==='COMPRAR'?55:15,col:'var(--green)',bg:'rgba(25,230,160,.06)',bc:'rgba(25,230,160,.4)',b:`Recaptura $${(spot+80).toLocaleString('pt-PT')}. Alvo: $${(spot+180).toLocaleString('pt-PT')}. Exige: USD enfraquecer + FOMC dovish.`},
-    {l:signal==='VENDER'?'BASE BAIXISTA':'BAIXISTA',p:signal==='VENDER'?55:30,col:'var(--red)',bg:'rgba(255,77,109,.06)',bc:'rgba(255,77,109,.4)',b:`Cascata Short Gamma → $${(spot-220).toLocaleString('pt-PT')}. USD forte + FOMC hawkish.`},
-    {l:'LATERALIZAÇÃO',p:Math.max(5,100-(signal==='COMPRAR'?55:signal==='VENDER'?55:36)-30),col:'var(--amber)',bg:'rgba(245,166,35,.06)',bc:'rgba(245,166,35,.4)',b:`Range $${(spot-60).toLocaleString('pt-PT')}–$${(spot+100).toLocaleString('pt-PT')}. Vol comprimida. Aguardar catalisador.`},
+    {l:signal==='BUY'?'BASE ALTISTA':'ALTISTA',p:buyProb,col:'var(--green)',bg:'rgba(25,230,160,.06)',bc:'rgba(25,230,160,.4)',b:`Alvo: $${(spot+200).toLocaleString('pt-PT')}. Exige: USD enfraquecer + FOMC neutro.`},
+    {l:signal==='SELL'?'BASE BAIXISTA':'BAIXISTA',p:sellProb,col:'var(--red)',bg:'rgba(255,77,109,.06)',bc:'rgba(255,77,109,.4)',b:`Alvo: $${(spot-220).toLocaleString('pt-PT')}. Exige: FOMC hawkish + USD forte.`},
+    {l:'LATERALIZAÇÃO',p:latProb,col:'var(--amber)',bg:'rgba(245,166,35,.06)',bc:'rgba(245,166,35,.4)',b:`Range $${(spot-60).toLocaleString('pt-PT')}–$${(spot+100).toLocaleString('pt-PT')}. Vol comprimida. Aguardar catalisador.`},
   ].map(s=>`<div class="scen" style="background:${s.bg};border-color:${s.bc}"><div class="scen-t" style="color:${s.col}">${s.l}<span>${s.p}%</span></div><div class="scen-b">${s.b}</div><div class="scen-prog" style="background:${s.col};width:${s.p}%"></div></div>`).join('');
 
+  // Log
   const n=new Date();
   const ts=[n.getHours(),n.getMinutes()].map(x=>String(x).padStart(2,'0')).join(':');
-  const sc=signal==='COMPRAR'?'var(--green)':signal==='VENDER'?'var(--red)':'var(--amber)';
-  logEntries.unshift({ts,signal,score,price:spot,color:sc});
+  const sc=signal==='BUY'?'var(--green)':signal==='SELL'?'var(--red)':signal==='WATCH'?'var(--blue)':'var(--amber)';
+  logEntries.unshift({ts,signal,score,assertPct,price:spot,color:sc});
   if(logEntries.length>8)logEntries.pop();
-  document.getElementById('log-body').innerHTML=logEntries.map(e=>`<tr><td style="color:var(--muted)">${e.ts}</td><td style="color:${e.color};font-weight:600">${e.signal}</td><td style="color:${e.color}">${e.score}</td><td>$${e.price.toLocaleString('pt-PT')}</td></tr>`).join('');
+  document.getElementById('log-body').innerHTML=logEntries.map(e=>`
+    <tr>
+      <td style="color:var(--muted)">${e.ts}</td>
+      <td style="color:${e.color};font-weight:600">${e.signal}</td>
+      <td style="color:${e.color}">${e.score}</td>
+      <td style="color:${e.color}">${e.assertPct}%</td>
+      <td>$${e.price.toLocaleString('pt-PT')}</td>
+    </tr>`).join('');
 }
 
-// ── INIT ──────────────────────────────────────────────────────────
+// INIT
 renderGEX(); renderCorr(); compute();
 </script>
 </body>
