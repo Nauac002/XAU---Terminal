@@ -10,321 +10,252 @@ const FRED_KEY = process.env.FRED_API_KEY || '';
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
+app.get('/health', (req,res) => res.json({ status:'ok', time:new Date().toISOString() }));
 
-// ════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════
 // 28 PAIRS
-// ════════════════════════════════════════════════════════════════
-const PAIRS_28 = [
-  { ticker:'EURUSD=X', base:'EUR', quote:'USD' },
-  { ticker:'GBPUSD=X', base:'GBP', quote:'USD' },
-  { ticker:'AUDUSD=X', base:'AUD', quote:'USD' },
-  { ticker:'NZDUSD=X', base:'NZD', quote:'USD' },
-  { ticker:'USDCAD=X', base:'USD', quote:'CAD' },
-  { ticker:'USDCHF=X', base:'USD', quote:'CHF' },
-  { ticker:'USDJPY=X', base:'USD', quote:'JPY' },
-  { ticker:'EURGBP=X', base:'EUR', quote:'GBP' },
-  { ticker:'EURAUD=X', base:'EUR', quote:'AUD' },
-  { ticker:'EURNZD=X', base:'EUR', quote:'NZD' },
-  { ticker:'EURCAD=X', base:'EUR', quote:'CAD' },
-  { ticker:'EURCHF=X', base:'EUR', quote:'CHF' },
-  { ticker:'EURJPY=X', base:'EUR', quote:'JPY' },
-  { ticker:'GBPAUD=X', base:'GBP', quote:'AUD' },
-  { ticker:'GBPNZD=X', base:'GBP', quote:'NZD' },
-  { ticker:'GBPCAD=X', base:'GBP', quote:'CAD' },
-  { ticker:'GBPCHF=X', base:'GBP', quote:'CHF' },
-  { ticker:'GBPJPY=X', base:'GBP', quote:'JPY' },
-  { ticker:'AUDNZD=X', base:'AUD', quote:'NZD' },
-  { ticker:'AUDCAD=X', base:'AUD', quote:'CAD' },
-  { ticker:'AUDCHF=X', base:'AUD', quote:'CHF' },
-  { ticker:'AUDJPY=X', base:'AUD', quote:'JPY' },
-  { ticker:'NZDCAD=X', base:'NZD', quote:'CAD' },
-  { ticker:'NZDCHF=X', base:'NZD', quote:'CHF' },
-  { ticker:'NZDJPY=X', base:'NZD', quote:'JPY' },
-  { ticker:'CADCHF=X', base:'CAD', quote:'CHF' },
-  { ticker:'CADJPY=X', base:'CAD', quote:'JPY' },
-  { ticker:'CHFJPY=X', base:'CHF', quote:'JPY' },
+// ════════════════════════════════════════════════════
+const PAIRS = [
+  {t:'EURUSD=X',b:'EUR',q:'USD'},{t:'GBPUSD=X',b:'GBP',q:'USD'},
+  {t:'AUDUSD=X',b:'AUD',q:'USD'},{t:'NZDUSD=X',b:'NZD',q:'USD'},
+  {t:'USDCAD=X',b:'USD',q:'CAD'},{t:'USDCHF=X',b:'USD',q:'CHF'},
+  {t:'USDJPY=X',b:'USD',q:'JPY'},{t:'EURGBP=X',b:'EUR',q:'GBP'},
+  {t:'EURAUD=X',b:'EUR',q:'AUD'},{t:'EURNZD=X',b:'EUR',q:'NZD'},
+  {t:'EURCAD=X',b:'EUR',q:'CAD'},{t:'EURCHF=X',b:'EUR',q:'CHF'},
+  {t:'EURJPY=X',b:'EUR',q:'JPY'},{t:'GBPAUD=X',b:'GBP',q:'AUD'},
+  {t:'GBPNZD=X',b:'GBP',q:'NZD'},{t:'GBPCAD=X',b:'GBP',q:'CAD'},
+  {t:'GBPCHF=X',b:'GBP',q:'CHF'},{t:'GBPJPY=X',b:'GBP',q:'JPY'},
+  {t:'AUDNZD=X',b:'AUD',q:'NZD'},{t:'AUDCAD=X',b:'AUD',q:'CAD'},
+  {t:'AUDCHF=X',b:'AUD',q:'CHF'},{t:'AUDJPY=X',b:'AUD',q:'JPY'},
+  {t:'NZDCAD=X',b:'NZD',q:'CAD'},{t:'NZDCHF=X',b:'NZD',q:'CHF'},
+  {t:'NZDJPY=X',b:'NZD',q:'JPY'},{t:'CADCHF=X',b:'CAD',q:'CHF'},
+  {t:'CADJPY=X',b:'CAD',q:'JPY'},{t:'CHFJPY=X',b:'CHF',q:'JPY'},
 ];
-const CURRENCIES = ['USD','EUR','GBP','JPY','CHF','CAD','AUD','NZD'];
+const CURS = ['USD','EUR','GBP','JPY','CHF','CAD','AUD','NZD'];
 
-// ════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════
 // TF CONFIG
-// candles = how many candles to return in the timeseries
-// fetchRange = how much data to pull to have enough for TMA warmup
-// ════════════════════════════════════════════════════════════════
-const TF_CONFIG = {
-  D1:  { interval:'1d',  range:'200d', candles:60,  tmaPeriod:14, label:'D1'  },
-  H4:  { interval:'1h',  range:'60d',  candles:60,  tmaPeriod:14, label:'H4', resample:4 },
-  H1:  { interval:'1h',  range:'14d',  candles:60,  tmaPeriod:14, label:'H1'  },
-  M30: { interval:'30m', range:'7d',   candles:60,  tmaPeriod:14, label:'M30' },
-  M15: { interval:'15m', range:'5d',   candles:60,  tmaPeriod:14, label:'M15' },
+// For each TF we request enough candles to build a
+// proper history. The frontend shows the last N points.
+// ════════════════════════════════════════════════════
+const TF_CFG = {
+  W1:  { iv:'1wk', rng:'2y',   pts:52,  lbl:'W1'  },
+  D1:  { iv:'1d',  rng:'1y',   pts:100, lbl:'D1'  },
+  H4:  { iv:'1h',  rng:'60d',  pts:100, rs:4, lbl:'H4' },
+  H1:  { iv:'1h',  rng:'14d',  pts:100, lbl:'H1'  },
+  M30: { iv:'30m', rng:'7d',   pts:100, lbl:'M30' },
+  M15: { iv:'15m', rng:'5d',   pts:100, lbl:'M15' },
 };
 
-// ════════════════════════════════════════════════════════════════
-// MATH HELPERS
-// ════════════════════════════════════════════════════════════════
-
-// Simple Moving Average
-function sma(arr, period) {
-  const out = new Array(arr.length).fill(null);
-  for (let i = period - 1; i < arr.length; i++) {
-    let sum = 0;
-    for (let j = 0; j < period; j++) sum += arr[i - j];
-    out[i] = sum / period;
-  }
-  return out;
-}
-
-// Triangular Moving Average = SMA of SMA
-function tma(arr, period) {
-  const half = Math.ceil(period / 2);
-  const s1   = sma(arr, half);
-  const valid = s1.filter(v => v !== null);
-  const s2   = sma(valid, half);
-  // pad front to match original length
-  const pad  = arr.length - s2.length;
-  return [...new Array(pad).fill(null), ...s2];
-}
-
-// Rolling slope of TMA over last `win` points at each position
-// Returns array same length as input, null where not enough data
-function rollingSlope(tmaArr, win = 5) {
-  const out = new Array(tmaArr.length).fill(null);
-  for (let i = win - 1; i < tmaArr.length; i++) {
-    // collect last `win` non-null values ending at i
-    const slice = tmaArr.slice(Math.max(0, i - win * 3), i + 1).filter(v => v !== null).slice(-win);
-    if (slice.length < win) continue;
-    // linear regression slope
-    const xm = (win - 1) / 2;
-    const ym = slice.reduce((a, b) => a + b, 0) / win;
-    let num = 0, den = 0;
-    for (let j = 0; j < win; j++) {
-      num += (j - xm) * (slice[j] - ym);
-      den += (j - xm) ** 2;
-    }
-    out[i] = den === 0 ? 0 : num / den;
-  }
-  return out;
-}
-
-// ════════════════════════════════════════════════════════════════
-// YAHOO FINANCE OHLC FETCH
-// ════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════
+// FETCH CANDLES from Yahoo Finance
+// Returns array of { c (close), t (unix timestamp) }
+// ════════════════════════════════════════════════════
 async function fetchCandles(ticker, interval, range) {
-  for (const base of ['https://query1.finance.yahoo.com', 'https://query2.finance.yahoo.com']) {
+  for (const base of ['https://query1.finance.yahoo.com','https://query2.finance.yahoo.com']) {
     try {
       const url = `${base}/v8/finance/chart/${encodeURIComponent(ticker)}?interval=${interval}&range=${range}`;
       const r   = await fetch(url, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'Accept': 'application/json' },
-        timeout: 13000
+        headers:{ 'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'Accept':'application/json' },
+        timeout: 14000
       });
       if (!r.ok) continue;
-      const d   = await r.json();
+      const d = await r.json();
       const res = d?.chart?.result?.[0];
       if (!res) continue;
-      const closes    = res.indicators?.quote?.[0]?.close || [];
+      const closes     = res.indicators?.quote?.[0]?.close || [];
       const timestamps = res.timestamp || [];
-      // filter nulls
-      const valid = closes.map((c, i) => ({ c, t: timestamps[i] })).filter(x => x.c != null && x.t != null);
-      if (valid.length < 20) continue;
-      return valid;
-    } catch (_) { continue; }
+      const valid = [];
+      for (let i = 0; i < closes.length; i++) {
+        if (closes[i] != null && timestamps[i] != null) {
+          valid.push({ c: closes[i], t: timestamps[i] });
+        }
+      }
+      if (valid.length >= 10) return valid;
+    } catch(_) { continue; }
   }
   return null;
 }
 
-// Resample 1h candles → H4 by grouping every 4
+// Resample 1h → H4 (take every 4th close)
 function resampleH4(candles) {
   const out = [];
-  for (let i = 3; i < candles.length; i += 4) {
-    out.push({ c: candles[i].c, t: candles[i].t });
-  }
+  for (let i = 3; i < candles.length; i += 4) out.push(candles[i]);
   return out;
 }
 
-// ════════════════════════════════════════════════════════════════
-// CSS CORE — produces a TIMESERIES per currency
+// ════════════════════════════════════════════════════
+// CSS CORE — correct methodology
 //
-// For each candle index k (after warmup), we compute:
-//   pairSlope[k]  = slope of TMA of pair closes up to candle k
-//   currencyStrength[currency][k] = avg of signed pairSlopes
+// For each candle k, for each pair:
+//   pct[k] = (close[k] - close[0]) / close[0] * 100
+//   (cumulative % return from start of window)
 //
-// This gives 8 lines × N time points → chart-ready data
-// ════════════════════════════════════════════════════════════════
-async function calcCSSTimeseries(tfKey) {
-  const cfg = TF_CONFIG[tfKey];
+// Currency strength[k] = mean of signed pct across all pairs
+//   base  → +pct (base appreciates when pair goes up)
+//   quote → -pct (quote depreciates when pair goes up)
+//
+// Then we normalise so the series is centred around 0
+// and scale is consistent across currencies.
+// ════════════════════════════════════════════════════
+async function calcCSS(tfKey) {
+  const cfg = TF_CFG[tfKey];
 
-  // 1. Fetch all 28 pairs
-  const pairData = await Promise.all(PAIRS_28.map(async p => {
-    let candles = await fetchCandles(p.ticker, cfg.interval, cfg.range);
-    if (!candles) return { ...p, candles: null, ok: false };
-    if (cfg.resample) candles = resampleH4(candles);
+  // Fetch all 28 pairs
+  const pairData = await Promise.all(PAIRS.map(async p => {
+    let candles = await fetchCandles(p.t, cfg.iv, cfg.rng);
+    if (!candles || candles.length < 10) return { ...p, ok: false };
+    if (cfg.rs) candles = resampleH4(candles);
     return { ...p, candles, ok: true };
   }));
 
-  const okPairs  = pairData.filter(p => p.ok);
-  if (okPairs.length < 14) throw new Error(`Only ${okPairs.length}/28 pairs loaded`);
+  const ok = pairData.filter(p => p.ok);
+  if (ok.length < 14) throw new Error(`Only ${ok.length}/28 pairs OK`);
 
-  // 2. Align all pairs to same length (use shortest)
-  const minLen = Math.min(...okPairs.map(p => p.candles.length));
-  const useLen = Math.min(minLen, cfg.candles + cfg.tmaPeriod + 20);
-  // trim all to same length from the end
-  okPairs.forEach(p => { p.candles = p.candles.slice(-useLen); });
+  // Align to shortest length, keep last N points
+  const minLen = Math.min(...ok.map(p => p.candles.length));
+  const trimTo = Math.min(minLen, cfg.pts + 5);
+  ok.forEach(p => { p.candles = p.candles.slice(-trimTo); });
 
-  // 3. For each pair: compute TMA → rolling slope timeseries
-  okPairs.forEach(p => {
-    const closes = p.candles.map(c => c.c);
-    const tmaLine   = tma(closes, cfg.tmaPeriod);
-    const slopeLine = rollingSlope(tmaLine, 5);
-    // Normalise by price to get pip-like units
-    p.slopeSeries = slopeLine.map((s, i) => {
-      if (s === null) return null;
-      const price = closes[i] || 1;
-      return s / price * 10000;
-    });
+  const N = ok[0].candles.length;
+
+  // For each pair, compute cumulative % from first candle in window
+  ok.forEach(p => {
+    const base0 = p.candles[0].c;
+    p.pctSeries = p.candles.map(c => base0 !== 0 ? ((c.c - base0) / base0) * 100 : 0);
   });
 
-  // 4. Build currency strength timeseries
-  // timestamps from the first ok pair (all aligned to same length now)
-  const refPair  = okPairs[0];
-  const N        = refPair.candles.length;
-  const timestamps = refPair.candles.map(c => c.t);
+  // Accumulate currency strength at each candle
+  const raw = {};
+  CURS.forEach(c => raw[c] = new Array(N).fill(0));
+  const cnt = {};
+  CURS.forEach(c => cnt[c] = 0);
 
-  // For each candle index, compute currency strength
-  const strengthSeries = {};
-  CURRENCIES.forEach(c => { strengthSeries[c] = new Array(N).fill(null); });
+  // Count pairs per currency
+  ok.forEach(p => { cnt[p.b]++; cnt[p.q]++; });
 
   for (let i = 0; i < N; i++) {
-    const sums  = {};
-    const cnts  = {};
-    CURRENCIES.forEach(c => { sums[c] = 0; cnts[c] = 0; });
+    const sums = {};
+    CURS.forEach(c => sums[c] = 0);
+    ok.forEach(p => {
+      const v = p.pctSeries[i];
+      sums[p.b] += v;
+      sums[p.q] -= v;
+    });
+    CURS.forEach(c => { raw[c][i] = cnt[c] > 0 ? sums[c] / cnt[c] : 0; });
+  }
 
-    for (const p of okPairs) {
-      const s = p.slopeSeries[i];
-      if (s === null) continue;
-      sums[p.base]  += s;  cnts[p.base]++;
-      sums[p.quote] -= s;  cnts[p.quote]++;
+  // Timestamps and labels
+  const refCandles = ok[0].candles;
+  const labels = refCandles.map(c => {
+    const d = new Date(c.t * 1000);
+    if (tfKey === 'W1' || tfKey === 'D1') {
+      return `${d.getDate()}/${d.getMonth()+1}`;
     }
-
-    CURRENCIES.forEach(c => {
-      if (cnts[c] === 0) return;
-      strengthSeries[c][i] = +(sums[c] / cnts[c]).toFixed(6);
-    });
-  }
-
-  // 5. Trim to `candles` output points (remove warmup nulls from front)
-  // Find first index where ALL currencies have a value
-  let startIdx = 0;
-  for (let i = 0; i < N; i++) {
-    if (CURRENCIES.every(c => strengthSeries[c][i] !== null)) { startIdx = i; break; }
-  }
-  // Keep last `cfg.candles` valid points
-  const endIdx   = N;
-  const keepFrom = Math.max(startIdx, endIdx - cfg.candles);
-
-  const out = {};
-  CURRENCIES.forEach(c => {
-    out[c] = strengthSeries[c].slice(keepFrom, endIdx);
+    const hh = String(d.getHours()).padStart(2,'0');
+    const mm = String(d.getMinutes()).padStart(2,'0');
+    const dd = `${d.getDate()}/${d.getMonth()+1}`;
+    if (tfKey === 'H4' || tfKey === 'H1') return `${dd} ${hh}:${mm}`;
+    return `${hh}:${mm}`;
   });
-  const outTimestamps = timestamps.slice(keepFrom, endIdx);
 
-  // 6. Current scores (last value)
-  const scores  = {};
-  const ranked  = [];
-  CURRENCIES.forEach(c => {
-    const arr    = out[c].filter(v => v !== null);
-    scores[c]    = arr.length ? arr[arr.length - 1] : 0;
-  });
-  CURRENCIES.forEach(c => ranked.push({ currency: c, score: scores[c] }));
-  ranked.sort((a, b) => b.score - a.score);
+  // Last score per currency
+  const scores = {};
+  CURS.forEach(c => { scores[c] = +raw[c][N-1].toFixed(5); });
 
-  // 7. Format labels (human-readable time)
-  const labels = outTimestamps.map(t => {
-    const d = new Date(t * 1000);
-    if (tfKey === 'D1') return `${d.getMonth()+1}/${d.getDate()}`;
-    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-  });
+  // Ranked
+  const ranked = CURS.map(c => ({ currency:c, score:scores[c] }))
+    .sort((a,b) => b.score - a.score);
+
+  // Pair scores (last value)
+  const pairScores = ok.map(p => ({
+    ticker: p.t, base: p.b, quote: p.q,
+    score: +p.pctSeries[N-1].toFixed(5), ok: true
+  }));
 
   return {
     tf:       tfKey,
     labels,
-    series:   out,   // { USD: [v1,v2,...], EUR: [...], ... }
+    series:   raw,     // { USD:[...100 pts...], EUR:[...], ... }
     scores,
     ranked,
-    pairsOk:  okPairs.length,
-    points:   out[CURRENCIES[0]].length,
-    pairs:    okPairs.map(p => ({
-      ticker: p.ticker, base: p.base, quote: p.quote,
-      score:  p.slopeSeries ? +(p.slopeSeries.filter(v=>v!==null).slice(-1)[0]||0).toFixed(6) : 0,
-      ok:     p.ok
-    })),
-    ts: new Date().toISOString()
+    pairsOk:  ok.length,
+    points:   N,
+    pairs:    pairScores,
+    ts:       new Date().toISOString()
   };
 }
 
-// ════════════════════════════════════════════════════════════════
-// CACHE
-// ════════════════════════════════════════════════════════════════
-const cssCache = {};
-const CSS_TTL  = { D1:30*60*1000, H4:15*60*1000, H1:8*60*1000, M30:5*60*1000, M15:3*60*1000 };
+// ════════════════════════════════════════════════════
+// CACHE PER TF
+// ════════════════════════════════════════════════════
+const cache = {};
+const TTL = { W1:60*60*1000, D1:30*60*1000, H4:15*60*1000, H1:8*60*1000, M30:5*60*1000, M15:3*60*1000 };
 
 async function getCSS(tf) {
   const now = Date.now();
-  if (cssCache[tf] && (now - cssCache[tf].time) < CSS_TTL[tf]) {
-    return { ...cssCache[tf].data, cached: true, age: Math.round((now - cssCache[tf].time) / 1000) };
+  if (cache[tf] && (now - cache[tf].ts) < TTL[tf]) {
+    return { ...cache[tf].data, cached:true, age:Math.round((now-cache[tf].ts)/1000) };
   }
-  const data = await calcCSSTimeseries(tf);
-  cssCache[tf] = { data, time: now };
-  return { ...data, cached: false, age: 0 };
+  const data = await calcCSS(tf);
+  cache[tf] = { data, ts: now };
+  return { ...data, cached:false, age:0 };
 }
 
-// ════════════════════════════════════════════════════════════════
-// API
-// ════════════════════════════════════════════════════════════════
-app.get('/api/css/:tf', async (req, res) => {
+// ════════════════════════════════════════════════════
+// CSS ENDPOINTS
+// ════════════════════════════════════════════════════
+app.get('/api/css/:tf', async (req,res) => {
   const tf = req.params.tf.toUpperCase();
-  if (!TF_CONFIG[tf]) return res.status(400).json({ error: `Unknown TF. Valid: D1,H4,H1,M30,M15` });
-  try {
-    res.json(await getCSS(tf));
-  } catch(e) {
-    res.status(500).json({ error: e.message });
-  }
+  if (!TF_CFG[tf]) return res.status(400).json({ error:`Unknown TF. Valid: ${Object.keys(TF_CFG).join(',')}` });
+  try { res.json(await getCSS(tf)); }
+  catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-app.get('/api/css/all/multi', async (req, res) => {
+// Sequential multi-TF to avoid Yahoo rate limits
+app.get('/api/css/all/multi', async (req,res) => {
   const tfs = ['D1','H4','H1','M30','M15'];
-  const result = {};
+  const out  = {};
   for (const tf of tfs) {
-    try { result[tf] = await getCSS(tf); }
-    catch(e) { result[tf] = { error: e.message, tf }; }
-    await new Promise(r => setTimeout(r, 500)); // avoid rate limiting
+    try { out[tf] = await getCSS(tf); }
+    catch(e) { out[tf] = { error: e.message, tf }; }
+    await new Promise(r => setTimeout(r, 400));
   }
-  result._ts = new Date().toISOString();
-  res.json(result);
+  out._ts = new Date().toISOString();
+  res.json(out);
 });
 
-// ════════════════════════════════════════════════════════════════
-// EXISTING ENDPOINTS (YF + FRED + MFC + /api/all)
-// ════════════════════════════════════════════════════════════════
+// Single TF refresh (used by auto-refresh on frontend)
+app.get('/api/css/refresh/:tf', async (req,res) => {
+  const tf = req.params.tf.toUpperCase();
+  if (!TF_CFG[tf]) return res.status(400).json({ error:'Unknown TF' });
+  // Force refresh: clear cache for this TF
+  delete cache[tf];
+  try { res.json(await getCSS(tf)); }
+  catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ════════════════════════════════════════════════════
+// EXISTING XAU TERMINAL ENDPOINTS
+// ════════════════════════════════════════════════════
 async function yfQuote(ticker) {
   for (const base of ['https://query1.finance.yahoo.com','https://query2.finance.yahoo.com']) {
     try {
       const url = `${base}/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1m&range=1d`;
       const r   = await fetch(url,{headers:{'User-Agent':'Mozilla/5.0','Accept':'application/json'},timeout:10000});
       if(!r.ok) continue;
-      const d   = await r.json();
+      const d = await r.json();
       const meta = d?.chart?.result?.[0]?.meta;
       if(!meta) continue;
       const price = meta.regularMarketPrice??meta.previousClose;
       const prev  = meta.chartPreviousClose??meta.previousClose;
-      const chgPct = prev?((price-prev)/prev*100):0;
-      return {price:+price.toFixed(6),prev:+prev.toFixed(6),chgPct:+chgPct.toFixed(4)};
+      return { price:+price.toFixed(6), prev:+prev.toFixed(6), chgPct:+((price-prev)/(prev||1)*100).toFixed(4) };
     } catch(_){ continue; }
   }
   return null;
 }
 
-app.get('/api/yf/:symbol', async (req,res)=>{
+app.get('/api/yf/:symbol', async(req,res) => {
   const sym=req.params.symbol;
   const q=await yfQuote(sym);
   if(!q) return res.status(502).json({error:'Yahoo unreachable',symbol:sym});
@@ -343,61 +274,54 @@ async function fredAPI(series){
   const v=+parseFloat(obs[0].value).toFixed(4),p=obs[1]?+parseFloat(obs[1].value).toFixed(4):v;
   return{series,value:v,prev:p,change:+(v-p).toFixed(4),date:obs[0].date,source:'fred',ts:new Date().toISOString()};
 }
-
 async function treasuryYield(type){
   const n=new Date(),ym=`${n.getFullYear()}${String(n.getMonth()+1).padStart(2,'0')}`;
-  const url=`https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value_month=${ym}`;
-  const r=await fetch(url,{headers:{'User-Agent':'Mozilla/5.0'},timeout:12000});
+  const r=await fetch(`https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value_month=${ym}`,{headers:{'User-Agent':'Mozilla/5.0'},timeout:12000});
   if(!r.ok) throw new Error(`Treasury ${r.status}`);
-  const txt=await r.text();
-  const tag=type==='DGS10'?'BC_10YEAR':'TC_10YEAR';
+  const txt=await r.text(),tag=type==='DGS10'?'BC_10YEAR':'TC_10YEAR';
   const matches=[...txt.matchAll(new RegExp(`<${tag}>([\\d.]+)<\\/${tag}>`, 'g'))];
   if(!matches.length) throw new Error('tag not found');
   const vals=matches.map(m=>+parseFloat(m[1]).toFixed(4));
   const v=vals[vals.length-1],p=vals.length>1?vals[vals.length-2]:v;
   return{series:type,value:v/100,prev:p/100,change:+((v-p)/100).toFixed(4),source:'treasury',ts:new Date().toISOString()};
 }
-
-app.get('/api/fred/:series', async(req,res)=>{
-  const series=req.params.series;
-  try{return res.json(await fredAPI(series));}catch(e){}
-  if(series==='DGS10'||series==='DFII10'){try{return res.json(await treasuryYield(series));}catch(e){}}
-  if(series==='WALCL') return res.json({series,value:6600000,prev:6620000,change:-20000,source:'cached',ts:new Date().toISOString()});
-  res.status(502).json({error:'All sources failed',series});
+app.get('/api/fred/:series', async(req,res) => {
+  const s=req.params.series;
+  try{return res.json(await fredAPI(s));}catch(e){}
+  if(s==='DGS10'||s==='DFII10'){try{return res.json(await treasuryYield(s));}catch(e){}}
+  if(s==='WALCL') return res.json({series:s,value:6600000,prev:6620000,change:-20000,source:'cached',ts:new Date().toISOString()});
+  res.status(502).json({error:'All sources failed',series:s});
 });
 
-// MFC (% change method, for XAU terminal P6)
-let mfcCache=null,mfcCacheTime=0;
-app.get('/api/mfc', async(req,res)=>{
+// MFC for XAU P6
+let mfcCache=null,mfcCacheTs=0;
+app.get('/api/mfc', async(req,res) => {
   const now=Date.now();
-  if(mfcCache&&(now-mfcCacheTime)<4*60*1000) return res.json({...mfcCache,cached:true});
+  if(mfcCache&&(now-mfcCacheTs)<4*60*1000) return res.json({...mfcCache,cached:true});
   try{
-    const results=await Promise.all(PAIRS_28.map(async p=>{
-      const q=await yfQuote(p.ticker);
-      return q?{...p,...q,error:false}:{...p,error:true};
-    }));
-    const ok=results.filter(r=>!r.error).length;
-    if(ok<14) return res.status(502).json({error:`Only ${ok}/28 pairs`});
-    const raw={};CURRENCIES.forEach(c=>raw[c]=[]);
-    results.forEach(p=>{if(p.error)return;raw[p.base].push(+p.chgPct);raw[p.quote].push(-p.chgPct);});
-    const avgs={};CURRENCIES.forEach(c=>{avgs[c]=raw[c].length?raw[c].reduce((a,b)=>a+b,0)/raw[c].length:0;});
+    const results=await Promise.all(PAIRS.map(async p=>{const q=await yfQuote(p.t);return q?{...p,...q,ok:true}:{...p,ok:false};}));
+    const good=results.filter(r=>r.ok);
+    if(good.length<14) return res.status(502).json({error:`Only ${good.length}/28`});
+    const raw={};CURS.forEach(c=>raw[c]=[]);
+    good.forEach(p=>{raw[p.b].push(+p.chgPct);raw[p.q].push(-p.chgPct);});
+    const avgs={};CURS.forEach(c=>{avgs[c]=raw[c].length?raw[c].reduce((a,b)=>a+b,0)/raw[c].length:0;});
     const vals=Object.values(avgs),mn=Math.min(...vals),mx=Math.max(...vals),rng=mx-mn||0.0001;
-    const norm={};CURRENCIES.forEach(c=>{norm[c]=+(((avgs[c]-mn)/rng)*100).toFixed(2);});
-    const ranked=CURRENCIES.map(c=>({currency:c,strength:norm[c],raw:+avgs[c].toFixed(4)})).sort((a,b)=>b.strength-a.strength);
+    const norm={};CURS.forEach(c=>{norm[c]=+(((avgs[c]-mn)/rng)*100).toFixed(2);});
+    const ranked=CURS.map(c=>({currency:c,strength:norm[c],raw:+avgs[c].toFixed(4)})).sort((a,b)=>b.strength-a.strength);
     const usdE=ranked.find(r=>r.currency==='USD');
-    mfcCache={ranked,pairs:results.map(r=>({ticker:r.ticker,base:r.base,quote:r.quote,chgPct:r.chgPct})),usdStrength:usdE?.strength??50,usdRank:ranked.findIndex(r=>r.currency==='USD')+1,pairsLoaded:ok,ts:new Date().toISOString()};
-    mfcCacheTime=now;
+    mfcCache={ranked,usdStrength:usdE?.strength??50,usdRank:ranked.findIndex(r=>r.currency==='USD')+1,pairsLoaded:good.length,ts:new Date().toISOString()};
+    mfcCacheTs=now;
     res.json({...mfcCache,cached:false});
   }catch(e){res.status(500).json({error:e.message});}
 });
 
-app.get('/api/all', async(req,res)=>{
-  const base=`http://localhost:${PORT}`;
+app.get('/api/all', async(req,res) => {
+  const b=`http://localhost:${PORT}`;
   const tasks=[
-    {key:'xau',url:`${base}/api/yf/GC%3DF`},{key:'dxy',url:`${base}/api/yf/DX-Y.NYB`},
-    {key:'wti',url:`${base}/api/yf/CL%3DF`},{key:'eur',url:`${base}/api/yf/EURUSD%3DX`},
-    {key:'ust',url:`${base}/api/fred/DGS10`},{key:'tips',url:`${base}/api/fred/DFII10`},
-    {key:'fed',url:`${base}/api/fred/WALCL`},{key:'mfc',url:`${base}/api/mfc`},
+    {key:'xau',url:`${b}/api/yf/GC%3DF`},{key:'dxy',url:`${b}/api/yf/DX-Y.NYB`},
+    {key:'wti',url:`${b}/api/yf/CL%3DF`},{key:'eur',url:`${b}/api/yf/EURUSD%3DX`},
+    {key:'ust',url:`${b}/api/fred/DGS10`},{key:'tips',url:`${b}/api/fred/DFII10`},
+    {key:'fed',url:`${b}/api/fred/WALCL`},{key:'mfc',url:`${b}/api/mfc`},
   ];
   const out={};
   await Promise.all(tasks.map(async t=>{try{const r=await fetch(t.url,{timeout:18000});out[t.key]=await r.json();}catch(e){out[t.key]={error:e.message};}}));
@@ -405,11 +329,12 @@ app.get('/api/all', async(req,res)=>{
   res.json(out);
 });
 
-app.get('*', (req,res) => res.sendFile(path.join(__dirname,'public','index.html')));
+app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 
-app.listen(PORT, () => {
-  console.log(`CSS v2 + XAU Terminal v9 · port ${PORT}`);
-  console.log(`  /css.html           → CSS Dashboard`);
-  console.log(`  /api/css/M15        → CSS timeseries M15`);
-  console.log(`  /api/css/all/multi  → all TFs`);
+app.listen(PORT,()=>{
+  console.log(`CSS v3 + XAU v9 · port ${PORT}`);
+  console.log(`  /css.html          → CSS Dashboard`);
+  console.log(`  /api/css/M15       → single TF`);
+  console.log(`  /api/css/all/multi → all TFs`);
+  console.log(`  /api/css/refresh/M15 → force refresh`);
 });
