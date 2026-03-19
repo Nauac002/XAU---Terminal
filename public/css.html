@@ -624,57 +624,74 @@ async function doFetchAll(){
   ov.classList.remove('gone');
   lt.style.display='none'; rt.style.display='block';
 
-  // Safety closer
+  // Close overlay after 30s max — no matter what
   const safety=setTimeout(()=>{
     ov.classList.add('gone');
     btn.disabled=false; fi.classList.remove('spin');
     lt.style.display='block'; rt.style.display='none';
-    st.textContent='Timeout — servidor pode estar a acordar, tente novamente em 30s';
-  }, 120000);
+    st.innerHTML='<span style="color:var(--red)">Timeout 30s — ver consola (F12) para detalhes</span>';
+  }, 30000);
 
-  // Step 1: Wake server and start background warmup
-  ovTF.textContent='A acordar servidor...';
-  if(prog)prog.style.width='5%';
+  // Step 1: Test server is alive
+  ovTF.textContent='Passo 1/6: A contactar servidor...';
+  prog.style.width='5%';
   try{
-    // /health wakes the server, /api/css/warmup starts background calc
-    await fetch('/health', {signal: AbortSignal.timeout(20000)});
-    fetch('/api/css/warmup').catch(()=>{}); // fire and forget
-    await new Promise(r=>setTimeout(r,1500)); // let server start calculating
-  }catch(e){ /* ignore */ }
+    const h = await fetch('/health', {signal: AbortSignal.timeout(10000)});
+    const hd = await h.json();
+    ovTF.textContent='Servidor OK · '+hd.time;
+    prog.style.width='15%';
+  }catch(e){
+    clearTimeout(safety);
+    ov.classList.add('gone');
+    btn.disabled=false; fi.classList.remove('spin');
+    lt.style.display='block'; rt.style.display='none';
+    st.innerHTML='<span style="color:var(--red)">ERRO: Servidor não responde — '+e.message+'</span>';
+    return;
+  }
 
-  // Step 2: Load each TF individually, show each as it arrives
-  const tfs=['D1','H4','H1','M30','M15'];
+  // Step 2: Load TFs one by one with visible progress
+  const tfs=['M15','M30','H1','H4','D1'];
   let loaded=0;
   for(const tf of tfs){
-    ovTF.textContent='Calculando '+tf+' ('+Math.round((loaded/tfs.length)*100)+'%)...';
-    if(prog)prog.style.width=((loaded/tfs.length)*85+10)+'%';
+    const pct = 15 + ((loaded/tfs.length)*80);
+    prog.style.width=pct+'%';
+    ovTF.textContent='Passo '+(loaded+2)+'/6: Calculando '+tf+'...';
     try{
-      const r=await fetch('/api/css/'+tf, {signal: AbortSignal.timeout(60000)});
-      if(r.ok){
-        const d=await r.json();
-        if(d.series&&!d.error){
-          S.data[tf]=d;
-          loaded++;
-          // Show chart as soon as M15 (last and most important) loads
-          // OR show immediately when first TF is ready and overlay is gone
-          if(tf==='M15'||loaded===1){
-            // Close overlay early to show progress
-            clearTimeout(safety);
-            ov.classList.add('gone');
-            btn.disabled=false; fi.classList.remove('spin');
-            lt.style.display='block'; rt.style.display='none';
-          }
-          if(S.activeTF===tf||S.activeTF==='ALL') refreshChart();
-          renderPanel();
-          const n=new Date(),ts=[n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
-          st.textContent=loaded+'/5 TFs carregados · '+ts+' UTC';
+      const r=await fetch('/api/css/'+tf, {signal: AbortSignal.timeout(55000)});
+      if(!r.ok){
+        const errTxt = await r.text();
+        console.warn(tf+' HTTP '+r.status, errTxt);
+        ovTF.textContent=tf+' erro '+r.status+' — a continuar...';
+        await new Promise(r=>setTimeout(r,500));
+        continue;
+      }
+      const d=await r.json();
+      if(d.error){
+        console.warn(tf+' error:', d.error);
+        ovTF.textContent=tf+' erro: '+d.error.substring(0,40)+'...';
+        await new Promise(r=>setTimeout(r,500));
+        continue;
+      }
+      if(d.series){
+        S.data[tf]=d;
+        loaded++;
+        ovTF.textContent='✓ '+tf+' carregado ('+d.pairsOk+'/28 pares, '+d.points+' pts)';
+        // Close overlay after first successful TF
+        if(loaded===1){
+          clearTimeout(safety);
+          ov.classList.add('gone');
+          btn.disabled=false; fi.classList.remove('spin');
+          lt.style.display='block'; rt.style.display='none';
         }
+        refreshChart(); renderPanel();
+        st.textContent=loaded+'/5 TFs · '+d.ts?.substring(11,19)+' UTC';
       }
     }catch(e){
       console.warn(tf, e.message);
+      ovTF.textContent=tf+' timeout/erro — a continuar...';
+      await new Promise(r=>setTimeout(r,500));
     }
-    // Small delay between requests to not overwhelm Yahoo
-    await new Promise(r=>setTimeout(r,300));
+    await new Promise(r=>setTimeout(r,200));
   }
 
   clearTimeout(safety);
@@ -683,11 +700,14 @@ async function doFetchAll(){
   lt.style.display='block'; rt.style.display='none';
 
   const n=new Date(),ts=[n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
-  st.textContent='✓ '+loaded+'/5 TFs · '+ts+' UTC · auto-refresh activo';
-  if(loaded>0){ S.countdown=180; scheduleAutoRefresh(); }
+  if(loaded>0){
+    st.textContent='✓ '+loaded+'/5 TFs · '+ts+' UTC · auto-refresh activo';
+    S.countdown=180; scheduleAutoRefresh();
+  }else{
+    st.innerHTML='<span style="color:var(--red)">0 TFs carregados · abre F12 > Consola para ver o erro</span>';
+  }
   refreshChart(); renderPanel();
 }
-
 
 function scheduleAutoRefresh() {
   // Clear existing timers
