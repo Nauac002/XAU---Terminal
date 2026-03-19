@@ -13,58 +13,63 @@
   --text:#dde4f0;--muted:#5a6680;--dim:#2a3448;
   --green:#19e6a0;--red:#ff4d6d;--amber:#f5a623;--blue:#38b6ff;--purple:#a78bfa;
   --mono:'IBM Plex Mono',monospace;
-  --usd:#60a5fa;--eur:#34d399;--gbp:#a78bfa;
-  --jpy:#f87171;--chf:#fbbf24;--cad:#f97316;
-  --aud:#22d3ee;--nzd:#e879f9;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
-body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12px;line-height:1.5;display:flex;flex-direction:column}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12px;display:flex;flex-direction:column}
+
+/* Currency palette */
+.c-USD{color:#60a5fa} .c-EUR{color:#34d399} .c-GBP{color:#a78bfa}
+.c-JPY{color:#f87171} .c-CHF{color:#fbbf24} .c-CAD{color:#f97316}
+.c-AUD{color:#22d3ee} .c-NZD{color:#e879f9}
+
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.1}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
 
-/* HEADER */
-.hdr{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;border-bottom:1px solid var(--border2);background:var(--bg2);flex-shrink:0;gap:10px;flex-wrap:wrap}
-.logo{font-size:13px;font-weight:600;letter-spacing:.1em}
+/* ── HEADER ─────────────────────────────── */
+.hdr{display:flex;align-items:center;gap:12px;padding:8px 16px;border-bottom:1px solid var(--border2);background:var(--bg2);flex-shrink:0;flex-wrap:wrap}
+.logo{font-size:13px;font-weight:600}
 .logo .c1{color:var(--amber)}.logo .c2{color:var(--muted);font-weight:300}
-.htag{font-size:9px;padding:2px 7px;border-radius:3px;border:1px solid var(--border2);color:var(--muted);letter-spacing:.07em}
-.htag.live{border-color:rgba(25,230,160,.4);color:var(--green)}
-.clock{font-size:11px;color:var(--muted)}
+.tag{font-size:9px;padding:2px 7px;border-radius:3px;border:1px solid var(--border2);color:var(--muted);letter-spacing:.07em}
+.tag.live{border-color:rgba(25,230,160,.5);color:var(--green)}
+.tag.refreshing{border-color:rgba(245,166,35,.5);color:var(--amber);animation:pulse 1s ease-in-out infinite}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.clock{font-size:11px;color:var(--muted);letter-spacing:.04em}
 .ldot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1.4s infinite}
-.back-link{font-size:9px;color:var(--muted);text-decoration:none;padding:2px 8px;border:1px solid var(--border);border-radius:3px;letter-spacing:.07em;transition:color .15s}
-.back-link:hover{color:var(--amber);border-color:rgba(245,166,35,.4)}
+.back{font-size:9px;color:var(--muted);text-decoration:none;padding:2px 8px;border:1px solid var(--border);border-radius:3px;letter-spacing:.06em;transition:color .15s}
+.back:hover{color:var(--amber);border-color:rgba(245,166,35,.4)}
 
-/* TOOLBAR */
-.toolbar{display:flex;align-items:center;gap:8px;padding:7px 16px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
-.fetch-btn{display:flex;align-items:center;gap:6px;padding:5px 13px;background:rgba(25,230,160,.1);border:1px solid var(--green);border-radius:4px;color:var(--green);font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;cursor:pointer;transition:all .2s;white-space:nowrap}
-.fetch-btn:hover{background:rgba(25,230,160,.2)}
-.fetch-btn:disabled{opacity:.4;cursor:not-allowed}
+/* ── TOOLBAR ─────────────────────────────── */
+.toolbar{display:flex;align-items:center;gap:8px;padding:6px 16px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+.fbtn{display:flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(25,230,160,.1);border:1px solid var(--green);border-radius:4px;color:var(--green);font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;cursor:pointer;transition:all .2s;white-space:nowrap}
+.fbtn:hover{background:rgba(25,230,160,.2)}
+.fbtn:disabled{opacity:.4;cursor:not-allowed}
 .ficon{width:11px;height:11px;flex-shrink:0}
 .spin{animation:spin .7s linear infinite}
-.divider{width:1px;height:18px;background:var(--border2);flex-shrink:0}
-.glbl{font-size:9px;color:var(--dim);letter-spacing:.08em;white-space:nowrap}
-.tf-group{display:flex;gap:3px}
-.btn{font-family:var(--mono);font-size:9px;font-weight:600;padding:3px 9px;border-radius:3px;border:1px solid var(--border2);background:var(--bg3);color:var(--muted);cursor:pointer;transition:all .15s;letter-spacing:.06em}
-.btn:hover{border-color:var(--amber);color:var(--amber)}
-.btn.active{background:rgba(245,166,35,.15);border-color:var(--amber);color:var(--amber)}
-.btn.purple{border-color:rgba(167,139,250,.3);color:var(--purple)}
-.btn.purple.active{background:rgba(167,139,250,.15);border-color:var(--purple);color:var(--purple)}
-.cur-group{display:flex;gap:3px;flex-wrap:wrap}
+.sep{width:1px;height:18px;background:var(--border2);flex-shrink:0}
+.glbl{font-size:9px;color:var(--dim);letter-spacing:.07em;white-space:nowrap}
+.tf-g{display:flex;gap:3px}
+.tbtn{font-family:var(--mono);font-size:9px;font-weight:600;padding:3px 9px;border-radius:3px;border:1px solid var(--border2);background:var(--bg3);color:var(--muted);cursor:pointer;transition:all .15s;letter-spacing:.06em}
+.tbtn:hover,.tbtn.active{background:rgba(245,166,35,.15);border-color:var(--amber);color:var(--amber)}
+.tbtn.all{border-color:rgba(167,139,250,.3);color:var(--purple)}
+.tbtn.all.active{background:rgba(167,139,250,.15);border-color:var(--purple);color:var(--purple)}
+.cur-g{display:flex;gap:3px;flex-wrap:wrap}
 .cbtn{font-family:var(--mono);font-size:9px;font-weight:600;padding:3px 7px;border-radius:3px;border:1px solid;cursor:pointer;transition:all .15s;letter-spacing:.05em}
 .cbtn.off{opacity:.2;filter:grayscale(.8)}
-.status{font-size:9px;color:var(--muted);flex:1;min-width:120px;text-align:right}
-.cdown{font-size:9px;color:var(--dim);white-space:nowrap}
+.stxt{font-size:9px;color:var(--muted);flex:1;text-align:right;min-width:100px}
+.cdwn{font-size:9px;color:var(--dim);white-space:nowrap}
 
-/* BODY */
+/* ── LAYOUT ─────────────────────────────── */
 .body{display:flex;flex:1;overflow:hidden;min-height:0}
 
-/* CHART COL */
-.chart-col{flex:1;display:flex;flex-direction:column;min-width:0;padding:10px 14px 8px;gap:5px;overflow:hidden}
-.chart-meta{display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+/* ── CHART ──────────────────────────────── */
+.chart-col{flex:1;display:flex;flex-direction:column;min-width:0;padding:8px 14px;gap:5px;overflow:hidden}
+.chart-top{display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .chart-lbl{font-size:9px;color:var(--dim);letter-spacing:.1em}
-.tf-badge{font-size:11px;font-weight:600;color:var(--amber);letter-spacing:.08em}
-.legend{display:flex;gap:10px;flex-wrap:wrap;flex-shrink:0;min-height:18px}
+.tf-badge{font-size:11px;font-weight:600;color:var(--amber)}
+.legend{display:flex;gap:10px;flex-wrap:wrap;flex-shrink:0;min-height:16px}
 .leg{display:flex;align-items:center;gap:5px;font-size:10px;cursor:pointer;transition:opacity .15s;user-select:none}
 .leg.off{opacity:.2}
 .leg-line{width:20px;height:2px;border-radius:1px;flex-shrink:0}
@@ -73,30 +78,48 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12
 .chart-box{flex:1;position:relative;min-height:0}
 .chart-box canvas{position:absolute;inset:0;width:100%!important;height:100%!important}
 
-/* SCORE COL */
-.score-col{width:240px;flex-shrink:0;border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
-.sc-hdr{padding:7px 12px;border-bottom:1px solid var(--border);font-size:9px;font-weight:600;color:var(--muted);letter-spacing:.12em;flex-shrink:0}
+/* ── SCORE PANEL ─────────────────────────── */
+.score-col{width:280px;flex-shrink:0;border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sc-hdr{padding:7px 12px;border-bottom:1px solid var(--border);font-size:9px;font-weight:600;color:var(--muted);letter-spacing:.12em;flex-shrink:0;display:flex;align-items:center;justify-content:space-between}
+.sc-hdr-right{font-size:8px;color:var(--dim)}
 .sc-body{flex:1;overflow-y:auto}
 
-/* TF blocks in score col */
-.tfb{border-bottom:1px solid var(--border)}
-.tfb-hdr{display:flex;align-items:center;justify-content:space-between;padding:5px 12px 2px}
-.tfb-name{font-size:9px;font-weight:600;color:var(--amber);letter-spacing:.1em}
-.tfb-meta{font-size:8px;color:var(--dim)}
-.tfb-rows{padding-bottom:3px}
+/* ── SCORE SUMMARY BOX ───────────────────── */
+/* 
+  This is the KEY feature: shows each currency's score across ALL timeframes
+  + total sum. Like the "Live Scores" box in the reference image.
+*/
+.summary-block{padding:8px 10px;border-bottom:1px solid var(--border)}
+.sb-title{font-size:9px;font-weight:600;color:var(--muted);letter-spacing:.1em;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
+.sb-cur-row{margin-bottom:4px;border-radius:4px;background:var(--bg3);padding:5px 8px;animation:fadeUp .2s ease-out both}
+.sb-cur-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
+.sb-cur-name{font-size:11px;font-weight:600}
+.sb-total{font-size:12px;font-weight:600}
+.sb-tfs{display:flex;gap:4px;flex-wrap:wrap}
+.sb-tf-pill{font-size:9px;padding:1px 6px;border-radius:3px;background:var(--bg4);border:1px solid var(--border);display:flex;align-items:center;gap:3px}
+.sb-tf-lbl{color:var(--dim)}
+.sb-tf-val{font-weight:500}
+
+/* TF detail block */
+.tf-block{border-bottom:1px solid var(--border)}
+.tf-bhdr{display:flex;align-items:center;justify-content:space-between;padding:5px 12px 2px;cursor:pointer}
+.tf-bhdr:hover{background:rgba(255,255,255,.02)}
+.tf-bname{font-size:9px;font-weight:600;color:var(--amber);letter-spacing:.1em}
+.tf-bmeta{font-size:8px;color:var(--dim)}
+.tf-brows{padding-bottom:3px}
 .sr{display:flex;align-items:center;gap:5px;padding:3px 12px;animation:fadeUp .2s ease-out both}
-.sr:hover{background:var(--bg3)}
+.sr:hover{background:rgba(255,255,255,.03)}
 .sr-rk{font-size:8px;color:var(--dim);width:12px;text-align:center;flex-shrink:0}
 .sr-cur{font-size:11px;font-weight:600;width:26px;flex-shrink:0}
 .sr-bar-w{flex:1;height:5px;background:var(--bg4);border-radius:2px;overflow:hidden}
 .sr-bar{height:100%;border-radius:2px;transition:width .6s}
-.sr-val{font-size:10px;font-weight:500;width:64px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums}
+.sr-val{font-size:10px;font-weight:500;width:68px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums}
 .sr-arr{font-size:9px;width:10px;text-align:center;flex-shrink:0}
 
 /* trade cards */
-.trade-wrap{border-top:1px solid var(--border);padding:7px 10px;flex-shrink:0}
-.trade-ttl{font-size:8px;font-weight:600;color:var(--muted);letter-spacing:.1em;margin-bottom:5px}
-.tcard{border-radius:4px;padding:6px 9px;margin-bottom:3px;border-left:3px solid}
+.trade-wrap{border-top:1px solid var(--border);padding:6px 10px;flex-shrink:0}
+.trade-ttl{font-size:8px;font-weight:600;color:var(--muted);letter-spacing:.1em;margin-bottom:4px}
+.tcard{border-radius:4px;padding:5px 8px;margin-bottom:3px;border-left:3px solid}
 .tcard.buy{background:rgba(25,230,160,.06);border-color:rgba(25,230,160,.4)}
 .tcard.sell{background:rgba(255,77,109,.06);border-color:rgba(255,77,109,.4)}
 .tc-lbl{font-size:8px;font-weight:600;letter-spacing:.08em;margin-bottom:1px}
@@ -104,54 +127,46 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12
 .tc-why{font-size:9px;color:var(--muted);margin-top:1px;line-height:1.4}
 
 /* pair grid */
-.pair-wrap{border-top:1px solid var(--border);padding:6px 10px 8px;flex-shrink:0}
+.pair-wrap{border-top:1px solid var(--border);padding:5px 10px 8px;flex-shrink:0}
 .pair-ttl{font-size:8px;font-weight:600;color:var(--muted);letter-spacing:.1em;margin-bottom:4px}
-.pair-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px}
-.pcell{display:flex;justify-content:space-between;align-items:center;padding:2px 5px;border-radius:3px;background:var(--bg3);font-size:9px}
-.pname{color:var(--muted)}
-.pval{font-weight:500}
+.pair-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px}
+.pc{display:flex;justify-content:space-between;align-items:center;padding:2px 5px;border-radius:3px;background:var(--bg3);font-size:9px}
+.pn{color:var(--muted)}
+.pv{font-weight:500}
 
 /* overlay */
-.overlay{position:fixed;inset:0;background:rgba(7,9,13,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:500;transition:opacity .3s}
+.overlay{position:fixed;inset:0;background:rgba(7,9,13,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:500;transition:opacity .3s}
 .overlay.gone{opacity:0;pointer-events:none}
-.spin-ring{width:32px;height:32px;border:2px solid rgba(255,255,255,.08);border-top-color:var(--amber);border-radius:50%;animation:spin .65s linear infinite}
-.ov-msg{font-size:12px;color:var(--muted);letter-spacing:.04em;text-align:center}
+.spin-ring{width:30px;height:30px;border:2px solid rgba(255,255,255,.08);border-top-color:var(--amber);border-radius:50%;animation:spin .65s linear infinite}
+.ov-msg{font-size:12px;color:var(--muted);text-align:center}
+.ov-prog-w{width:200px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
+.ov-prog{height:100%;background:var(--amber);border-radius:2px;transition:width .5s;width:0%}
 .ov-tf{font-size:10px;color:var(--amber)}
 .ov-sub{font-size:9px;color:var(--dim);text-align:center;line-height:1.7}
 
-/* progress bar */
-.ov-prog-wrap{width:220px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
-.ov-prog{height:100%;background:var(--amber);border-radius:2px;transition:width .4s;width:0%}
-
 ::-webkit-scrollbar{width:3px}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-@media(max-width:600px){.score-col{width:180px}}
+@media(max-width:620px){.score-col{width:200px}}
 </style>
 </head>
 <body>
 
-<!-- OVERLAY -->
 <div class="overlay" id="overlay">
   <div class="spin-ring"></div>
-  <div class="ov-msg">Calculando Currency Slope Strength</div>
-  <div class="ov-prog-wrap"><div class="ov-prog" id="ov-prog"></div></div>
+  <div class="ov-msg">Currency Slope Strength</div>
+  <div class="ov-prog-w"><div class="ov-prog" id="ov-prog"></div></div>
   <div class="ov-tf" id="ov-tf">Iniciando...</div>
-  <div class="ov-sub">
-    Busca histórico de candles para 28 pares × 5 TFs<br>
-    Calcula TMA + slope para cada candle<br>
-    Pode levar 30–60 segundos
-  </div>
+  <div class="ov-sub">Calculando variação acumulada por candle<br>28 pares × 5 timeframes · 100 pontos cada<br>Aguarde 30–60 segundos</div>
 </div>
 
 <!-- HEADER -->
 <div class="hdr">
-  <div style="display:flex;align-items:center;gap:10px">
-    <div class="logo"><span class="c1">CSS</span><span class="c2"> · Currency Slope Strength</span></div>
-    <div class="htag">TMA SLOPE · 28 PARES</div>
-    <div class="htag live">● LIVE</div>
-  </div>
-  <div style="display:flex;align-items:center;gap:10px">
-    <a href="/" class="back-link">← XAU TERMINAL</a>
+  <div class="logo"><span class="c1">CSS</span><span class="c2"> · Currency Slope Strength</span></div>
+  <div class="tag">28 PARES · CUMULATIVE %</div>
+  <div class="tag live" id="live-tag">● LIVE</div>
+  <div class="tag refreshing" id="refresh-tag" style="display:none">↻ ACTUALIZANDO</div>
+  <div class="hdr-right">
+    <a href="/" class="back">← XAU TERMINAL</a>
     <div class="clock" id="clock">--:--:--</div>
     <div class="ldot"></div>
   </div>
@@ -159,64 +174,64 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12
 
 <!-- TOOLBAR -->
 <div class="toolbar">
-  <button class="fetch-btn" id="fetch-btn" onclick="doFetch()">
+  <button class="fbtn" id="fetch-btn" onclick="doFetchAll()">
     <svg class="ficon" id="ficon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
       <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.66 0 3-4.03 3-9s-1.34-9-3-9"/>
     </svg>
     BUSCAR DADOS
   </button>
 
-  <div class="divider"></div>
+  <div class="sep"></div>
   <div class="glbl">TIMEFRAME</div>
-  <div class="tf-group" id="tf-btns">
-    <button class="btn" onclick="setTF(this,'D1')">D1</button>
-    <button class="btn" onclick="setTF(this,'H4')">H4</button>
-    <button class="btn" onclick="setTF(this,'H1')">H1</button>
-    <button class="btn" onclick="setTF(this,'M30')">M30</button>
-    <button class="btn active" onclick="setTF(this,'M15')">M15</button>
-    <button class="btn purple" onclick="setTF(this,'ALL')">ALL TF</button>
+  <div class="tf-g" id="tf-btns">
+    <button class="tbtn" onclick="setTF(this,'D1')">D1</button>
+    <button class="tbtn" onclick="setTF(this,'H4')">H4</button>
+    <button class="tbtn" onclick="setTF(this,'H1')">H1</button>
+    <button class="tbtn" onclick="setTF(this,'M30')">M30</button>
+    <button class="tbtn active" onclick="setTF(this,'M15')">M15</button>
+    <button class="tbtn all" onclick="setTF(this,'ALL')">ALL TF</button>
   </div>
 
-  <div class="divider"></div>
+  <div class="sep"></div>
   <div class="glbl">MOEDAS</div>
-  <div class="cur-group" id="cur-btns"></div>
+  <div class="cur-g" id="cur-btns"></div>
 
-  <div class="status" id="status">Pressione Buscar Dados para iniciar →</div>
-  <div class="cdown" id="cdown"></div>
+  <div class="stxt" id="stxt">Pressione Buscar Dados →</div>
+  <div class="cdwn" id="cdwn"></div>
 </div>
 
 <!-- BODY -->
 <div class="body">
 
-  <!-- CHART -->
+  <!-- CHART AREA -->
   <div class="chart-col">
-    <div class="chart-meta">
-      <div class="chart-lbl">SLOPE STRENGTH — HISTÓRICO DE CANDLES · CRUZAMENTOS EM TEMPO REAL</div>
+    <div class="chart-top">
+      <div class="chart-lbl">VARIAÇÃO ACUMULADA % — CRUZAMENTOS EM TEMPO REAL</div>
       <div class="tf-badge" id="tf-badge">M15</div>
     </div>
     <div class="legend" id="legend"></div>
     <div class="chart-box"><canvas id="chart"></canvas></div>
   </div>
 
-  <!-- SCORES -->
+  <!-- SCORE PANEL -->
   <div class="score-col">
-    <div class="sc-hdr">SCORES POR TIMEFRAME</div>
+    <div class="sc-hdr">
+      SCORES MULTI-TF
+      <span class="sc-hdr-right" id="sc-ts">—</span>
+    </div>
     <div class="sc-body" id="sc-body">
-      <div style="padding:14px 12px;color:var(--dim);font-size:11px;line-height:1.8">
+      <div style="padding:14px 12px;color:var(--dim);font-size:10px;line-height:1.8">
         Aguardando primeiro fetch...<br>
-        <span style="font-size:9px;color:var(--dim)">
-          O servidor calcula o slope<br>
-          de cada candle historicamente.<br>
-          Cruzamentos visíveis no gráfico.
-        </span>
+        <span style="font-size:9px">Mostrará score de cada moeda<br>
+        em cada TF + soma total.</span>
       </div>
     </div>
     <div class="trade-wrap" id="trade-wrap" style="display:none">
-      <div class="trade-ttl">MELHOR TRADE · <span id="trade-tf"></span></div>
+      <div class="trade-ttl">MELHOR TRADE · <span id="trade-tf-lbl">M15</span></div>
       <div id="trade-cards"></div>
     </div>
     <div class="pair-wrap">
-      <div class="pair-ttl">TOP PARES · SLOPE ACTIVO</div>
+      <div class="pair-ttl">TOP PARES · ACTIVO</div>
       <div class="pair-grid" id="pair-grid">
         <div style="color:var(--dim);font-size:9px;grid-column:1/-1">Aguardando...</div>
       </div>
@@ -225,45 +240,49 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12
 </div>
 
 <script>
-// ═══════════════════════════════════
+// ═════════════════════════════════════════════
 // CONFIG
-// ═══════════════════════════════════
+// ═════════════════════════════════════════════
 const COLS = {
-  USD:'#60a5fa', EUR:'#34d399', GBP:'#a78bfa',
-  JPY:'#f87171', CHF:'#fbbf24', CAD:'#f97316',
-  AUD:'#22d3ee', NZD:'#e879f9'
+  USD:'#60a5fa',EUR:'#34d399',GBP:'#a78bfa',
+  JPY:'#f87171',CHF:'#fbbf24',CAD:'#f97316',
+  AUD:'#22d3ee',NZD:'#e879f9'
 };
 const CURS = ['USD','EUR','GBP','JPY','CHF','CAD','AUD','NZD'];
 const TFS  = ['D1','H4','H1','M30','M15'];
 
-// ═══════════════════════════════════
+// Auto-refresh intervals per TF (ms)
+const REFRESH_INTERVAL = { D1:30*60*1000, H4:15*60*1000, H1:8*60*1000, M30:5*60*1000, M15:3*60*1000 };
+
+// ═════════════════════════════════════════════
 // STATE
-// ═══════════════════════════════════
+// ═════════════════════════════════════════════
 const S = {
-  data:     {},       // { D1: { labels, series, scores, ranked, pairs }, ... }
+  data:     {},
   activeTF: 'M15',
   vis:      new Set(CURS),
   chart:    null,
   countdown: 0,
+  refreshTimers: {},
 };
 
-// ═══════════════════════════════════
+// ═════════════════════════════════════════════
 // CLOCK
-// ═══════════════════════════════════
+// ═════════════════════════════════════════════
 setInterval(() => {
   const n = new Date();
   document.getElementById('clock').textContent =
     [n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':') + ' UTC';
   if (S.countdown > 0) {
     S.countdown--;
-    document.getElementById('cdown').textContent = 'Auto: ' + S.countdown + 's';
-    if (S.countdown === 0) doFetch();
+    document.getElementById('cdwn').textContent = 'próximo: ' + S.countdown + 's';
+    if (S.countdown === 0) doFetchAll();
   }
 }, 1000);
 
-// ═══════════════════════════════════
+// ═════════════════════════════════════════════
 // CURRENCY BUTTONS
-// ═══════════════════════════════════
+// ═════════════════════════════════════════════
 function buildCurBtns() {
   document.getElementById('cur-btns').innerHTML = CURS.map(c => {
     const col = COLS[c];
@@ -272,226 +291,263 @@ function buildCurBtns() {
       onclick="toggleCur('${c}')">${c}</button>`;
   }).join('');
 }
-
 function toggleCur(c) {
   if (S.vis.has(c)) {
     if (S.vis.size <= 2) return;
     S.vis.delete(c);
-    document.getElementById('cb-' + c).classList.add('off');
+    document.getElementById('cb-'+c).classList.add('off');
   } else {
     S.vis.add(c);
-    document.getElementById('cb-' + c).classList.remove('off');
+    document.getElementById('cb-'+c).classList.remove('off');
   }
   refreshChart();
 }
 
-// ═══════════════════════════════════
+// ═════════════════════════════════════════════
 // TF SELECTOR
-// ═══════════════════════════════════
+// ═════════════════════════════════════════════
 function setTF(el, tf) {
   S.activeTF = tf;
-  document.querySelectorAll('#tf-btns .btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#tf-btns .tbtn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('tf-badge').textContent = tf;
   refreshChart();
-  renderScores();
-  renderTrades();
-  renderPairs();
+  renderPanel();
 }
 
-// ═══════════════════════════════════
-// CHART INIT
-// ═══════════════════════════════════
+// ═════════════════════════════════════════════
+// CHART
+// ═════════════════════════════════════════════
 function initChart() {
   const ctx = document.getElementById('chart').getContext('2d');
   if (S.chart) { S.chart.destroy(); S.chart = null; }
-
   S.chart = new Chart(ctx, {
     type: 'line',
-    data: {
-      labels: [],
-      datasets: CURS.map(c => ({
-        label: c,
-        data:  [],
-        borderColor:     COLS[c],
-        backgroundColor: 'transparent',
-        borderWidth: 1.8,
-        pointRadius: 0,
-        pointHoverRadius: 4,
-        pointHoverBackgroundColor: COLS[c],
-        tension: 0.3,
-        hidden: false,
-      }))
-    },
+    data: { labels: [], datasets: CURS.map(c => ({
+      label: c, data: [],
+      borderColor: COLS[c],
+      backgroundColor: 'transparent',
+      borderWidth: 1.8,
+      pointRadius: 0, pointHoverRadius: 4,
+      pointHoverBackgroundColor: COLS[c],
+      tension: 0.35, hidden: false
+    }))},
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: { duration: 400 },
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration: 350 },
       interaction: { intersect: false, mode: 'index' },
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: '#0c1017',
-          borderColor: 'rgba(255,255,255,0.1)',
-          borderWidth: 1,
-          titleColor: '#5a6680',
-          bodyColor: '#dde4f0',
-          titleFont: { family: "'IBM Plex Mono'", size: 9 },
-          bodyFont:  { family: "'IBM Plex Mono'", size: 10 },
+          backgroundColor:'#0c1017', borderColor:'rgba(255,255,255,.12)', borderWidth:1,
+          titleColor:'#5a6680', bodyColor:'#dde4f0',
+          titleFont:{ family:"'IBM Plex Mono'", size:9 },
+          bodyFont:{ family:"'IBM Plex Mono'", size:10 },
           callbacks: {
             title: items => items[0]?.label || '',
             label: ctx => {
               const v = ctx.parsed.y;
-              if (v === null || v === undefined) return null;
-              const sign = v >= 0 ? '+' : '';
-              return ` ${ctx.dataset.label}  ${sign}${v.toFixed(5)}`;
+              if (v == null) return null;
+              return ` ${ctx.dataset.label}  ${v>=0?'+':''}${v.toFixed(4)}%`;
             },
             afterBody: items => {
-              // show rank in tooltip
               const vals = items
-                .filter(i => i.parsed.y !== null)
-                .map(i => ({ label: i.dataset.label, v: i.parsed.y }))
-                .sort((a,b) => b.v - a.v);
-              return ['', ...vals.map((x,i) => `  ${i+1}. ${x.label}`)];
+                .filter(i=>i.parsed.y!=null)
+                .map(i=>({l:i.dataset.label,v:i.parsed.y}))
+                .sort((a,b)=>b.v-a.v);
+              return ['──────────', ...vals.map((x,i)=>`${i+1}. ${x.l}  ${x.v>=0?'+':''}${x.v.toFixed(4)}`)];
             }
           }
-        },
+        }
       },
       scales: {
         x: {
-          grid:   { color: 'rgba(255,255,255,0.04)', drawTicks: false },
-          ticks:  { color: '#2a3448', font: { family: "'IBM Plex Mono'", size: 8 }, maxTicksLimit: 14, maxRotation: 0 },
-          border: { color: 'rgba(255,255,255,0.06)' }
+          grid: { color:'rgba(255,255,255,0.04)', drawTicks:false },
+          ticks: { color:'#2a3448', font:{ family:"'IBM Plex Mono'", size:8 }, maxTicksLimit:14, maxRotation:0 },
+          border: { color:'rgba(255,255,255,0.06)' }
         },
         y: {
-          grid: {
-            color: ctx => ctx.tick.value === 0
-              ? 'rgba(255,255,255,0.25)'
-              : 'rgba(255,255,255,0.04)',
-            drawTicks: false
-          },
-          ticks: {
-            color: '#5a6680',
-            font: { family: "'IBM Plex Mono'", size: 8 },
-            callback: v => (v >= 0 ? '+' : '') + v.toFixed(4)
-          },
-          border: { color: 'rgba(255,255,255,0.06)' }
+          grid: { color: ctx => ctx.tick.value === 0 ? 'rgba(255,255,255,.25)' : 'rgba(255,255,255,.04)', drawTicks:false },
+          ticks: { color:'#5a6680', font:{ family:"'IBM Plex Mono'", size:8 }, callback: v => (v>=0?'+':'') + v.toFixed(2)+'%' },
+          border: { color:'rgba(255,255,255,0.06)' }
         }
       }
     }
   });
 }
 
-// ═══════════════════════════════════
-// REFRESH CHART with server timeseries
-// ═══════════════════════════════════
 function refreshChart() {
   if (!S.chart) return;
-
   const tf = S.activeTF === 'ALL' ? 'M15' : S.activeTF;
   const d  = S.data[tf];
-
-  if (!d || !d.series) {
-    // clear chart
+  if (!d?.series) {
     S.chart.data.labels = [];
     S.chart.data.datasets.forEach(ds => ds.data = []);
     S.chart.update('none');
-    buildLegend(null);
+    document.getElementById('legend').innerHTML = '';
     return;
   }
-
-  // Set labels from server
   S.chart.data.labels = d.labels;
-
-  // Set data per currency
-  CURS.forEach((c, i) => {
-    const ds  = S.chart.data.datasets[i];
-    ds.data   = d.series[c] || [];
-    ds.hidden = !S.vis.has(c);
+  CURS.forEach((c,i) => {
+    S.chart.data.datasets[i].data   = d.series[c] || [];
+    S.chart.data.datasets[i].hidden = !S.vis.has(c);
   });
-
   S.chart.update('active');
   buildLegend(d);
 }
 
 function buildLegend(d) {
   const el = document.getElementById('legend');
-  if (!d || !d.scores) { el.innerHTML = ''; return; }
-
-  const sorted = Object.entries(d.scores).sort((a,b) => b[1] - a[1]);
-  el.innerHTML = sorted.map(([c, v]) => {
-    const sign = v >= 0 ? '+' : '';
-    const col  = COLS[c];
-    const off  = !S.vis.has(c) ? ' off' : '';
+  if (!d?.scores) { el.innerHTML=''; return; }
+  const sorted = Object.entries(d.scores).sort((a,b)=>b[1]-a[1]);
+  el.innerHTML = sorted.map(([c,v]) => {
+    const sign = v>=0?'+':'';
+    const off  = !S.vis.has(c)?' off':'';
     return `<div class="leg${off}" onclick="toggleCur('${c}')">
-      <div class="leg-line" style="background:${col}"></div>
-      <span class="leg-name" style="color:${col}">${c}</span>
-      <span class="leg-score">${sign}${v.toFixed(5)}</span>
+      <div class="leg-line" style="background:${COLS[c]}"></div>
+      <span class="leg-name" style="color:${COLS[c]}">${c}</span>
+      <span class="leg-score">${sign}${v.toFixed(4)}%</span>
     </div>`;
   }).join('');
 }
 
-// ═══════════════════════════════════
-// SCORE PANEL
-// ═══════════════════════════════════
-function renderScores() {
+// ═════════════════════════════════════════════
+// RENDER PANEL — Summary + TF blocks + trades
+// ═════════════════════════════════════════════
+function renderPanel() {
+  renderSummary();
+  renderTFBlocks();
+  renderTrades();
+  renderPairs();
+}
+
+// ─── SUMMARY: each currency × all TFs + SUM ──
+function renderSummary() {
+  // Check if we have any data
+  const availTFs = TFS.filter(tf => S.data[tf]?.scores);
+  if (availTFs.length === 0) return;
+
+  // For each currency, collect score per TF and compute total
+  const currencyData = CURS.map(c => {
+    const tfScores = {};
+    let total = 0;
+    availTFs.forEach(tf => {
+      const v = S.data[tf]?.scores?.[c] ?? null;
+      tfScores[tf] = v;
+      if (v !== null) total += v;
+    });
+    return { c, tfScores, total: +total.toFixed(4) };
+  }).sort((a,b) => b.total - a.total); // sort by total descending
+
+  const col = c => COLS[c];
+  const fv  = v => v == null ? '—' : (v>=0?'+':'')+v.toFixed(3);
+  const vc  = v => v == null ? 'var(--dim)' : v>0.001?'var(--green)':v<-0.001?'var(--red)':'var(--muted)';
+
+  let html = `<div class="summary-block">
+    <div class="sb-title">
+      FORÇA TOTAL POR MOEDA
+      <span style="font-size:8px;color:var(--dim)">${availTFs.join(' · ')}</span>
+    </div>`;
+
+  currencyData.forEach((cd, idx) => {
+    const totalCol  = cd.total >= 0.01 ? 'var(--green)' : cd.total <= -0.01 ? 'var(--red)' : 'var(--muted)';
+    const totalSign = cd.total >= 0 ? '+' : '';
+    html += `<div class="sb-cur-row" style="animation-delay:${idx*0.04}s">
+      <div class="sb-cur-hdr">
+        <span class="sb-cur-name" style="color:${col(cd.c)}">${cd.c}</span>
+        <span class="sb-total" style="color:${totalCol}">${totalSign}${cd.total.toFixed(3)}</span>
+      </div>
+      <div class="sb-tfs">`;
+    availTFs.forEach(tf => {
+      const v = cd.tfScores[tf];
+      html += `<div class="sb-tf-pill">
+        <span class="sb-tf-lbl">${tf}</span>
+        <span class="sb-tf-val" style="color:${vc(v)}">${fv(v)}</span>
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+
+  html += `</div>`;
+  document.getElementById('sc-body').innerHTML = html + getTFBlocksHTML();
+
+  // update timestamp
+  const anyTs = Object.values(S.data).find(d=>d?.ts)?.ts;
+  if (anyTs) document.getElementById('sc-ts').textContent = anyTs.substring(11,16)+' UTC';
+}
+
+// ─── TF BLOCKS ───────────────────────────────
+function getTFBlocksHTML() {
   let html = '';
   TFS.forEach(tf => {
-    const d        = S.data[tf];
+    const d = S.data[tf];
     const isActive = tf === (S.activeTF === 'ALL' ? 'M15' : S.activeTF);
-    if (!d || !d.scores) {
-      html += `<div class="tfb"><div class="tfb-hdr">
-        <span class="tfb-name">${tf}</span><span class="tfb-meta">— aguardando</span>
+    if (!d?.scores) {
+      html += `<div class="tf-block"><div class="tf-bhdr">
+        <span class="tf-bname">${tf}</span><span class="tf-bmeta">— aguardando</span>
       </div></div>`;
       return;
     }
-    const maxAbs = Math.max(...d.ranked.map(r => Math.abs(r.score)), 1e-9);
-    html += `<div class="tfb">
-      <div class="tfb-hdr">
-        <span class="tfb-name">${tf}${isActive ? ' ◄' : ''}</span>
-        <span class="tfb-meta">${d.pairsOk}/28 · ${d.points}pt</span>
+    const maxAbs = Math.max(...d.ranked.map(r=>Math.abs(r.score)), 1e-9);
+    html += `<div class="tf-block">
+      <div class="tf-bhdr" onclick="setActiveTF('${tf}')">
+        <span class="tf-bname">${tf}${isActive?' ◄':''}</span>
+        <span class="tf-bmeta">${d.pairsOk}/28 · ${d.points}pt ${d.cached?'·cache':''}</span>
       </div>
-      <div class="tfb-rows">`;
-    d.ranked.forEach((r, i) => {
-      const col  = COLS[r.currency];
-      const pct  = Math.min((Math.abs(r.score) / maxAbs) * 100, 100);
-      const sign = r.score >= 0 ? '+' : '';
-      const arr  = r.score > 1e-5 ? '↑' : r.score < -1e-5 ? '↓' : '→';
-      const ac   = r.score > 1e-5 ? 'var(--green)' : r.score < -1e-5 ? 'var(--red)' : 'var(--muted)';
-      const op   = r.score >= 0 ? 0.75 : 0.45;
+      <div class="tf-brows">`;
+    d.ranked.forEach((r,i)=>{
+      const col2 = COLS[r.currency];
+      const pct  = Math.min((Math.abs(r.score)/maxAbs)*100,100);
+      const sign = r.score>=0?'+':'';
+      const arr  = r.score>0.005?'↑':r.score<-0.005?'↓':'→';
+      const ac   = r.score>0.005?'var(--green)':r.score<-0.005?'var(--red)':'var(--muted)';
       html += `<div class="sr" style="animation-delay:${i*0.03}s">
         <div class="sr-rk">${i+1}</div>
-        <div class="sr-cur" style="color:${col}">${r.currency}</div>
-        <div class="sr-bar-w"><div class="sr-bar" style="width:${pct.toFixed(1)}%;background:${col};opacity:${op}"></div></div>
-        <div class="sr-val" style="color:${r.score>=0?'var(--green)':'var(--red)'}">${sign}${r.score.toFixed(5)}</div>
+        <div class="sr-cur" style="color:${col2}">${r.currency}</div>
+        <div class="sr-bar-w"><div class="sr-bar" style="width:${pct.toFixed(1)}%;background:${col2};opacity:${r.score>=0?.75:.45}"></div></div>
+        <div class="sr-val" style="color:${r.score>=0?'var(--green)':'var(--red)'}">${sign}${r.score.toFixed(4)}%</div>
         <div class="sr-arr" style="color:${ac}">${arr}</div>
       </div>`;
     });
     html += `</div></div>`;
   });
-  document.getElementById('sc-body').innerHTML = html;
+  return html;
+}
+
+function renderTFBlocks() {
+  // Just refresh sc-body (summary handles this now)
+  renderSummary();
+}
+
+function setActiveTF(tf) {
+  S.activeTF = tf;
+  document.querySelectorAll('#tf-btns .tbtn').forEach(b => {
+    b.classList.toggle('active', b.textContent === tf);
+  });
+  document.getElementById('tf-badge').textContent = tf;
+  refreshChart();
+  renderPanel();
 }
 
 function renderTrades() {
   const tf = S.activeTF === 'ALL' ? 'M15' : S.activeTF;
   const d  = S.data[tf];
   const tw = document.getElementById('trade-wrap');
-  if (!d || !d.ranked || d.ranked.length < 2) { tw.style.display = 'none'; return; }
+  if (!d?.ranked || d.ranked.length < 2) { tw.style.display='none'; return; }
   tw.style.display = 'block';
-  document.getElementById('trade-tf').textContent = tf;
-  const top = d.ranked[0], bot = d.ranked[d.ranked.length - 1];
-  const cT  = COLS[top.currency], cB = COLS[bot.currency];
-  const sp  = (top.score - bot.score).toFixed(5);
+  document.getElementById('trade-tf-lbl').textContent = tf;
+  const top = d.ranked[0], bot = d.ranked[d.ranked.length-1];
+  const sp  = (top.score - bot.score).toFixed(4);
   document.getElementById('trade-cards').innerHTML = `
     <div class="tcard buy">
       <div class="tc-lbl" style="color:var(--green)">▲ COMPRAR</div>
       <div class="tc-pair" style="color:var(--green)">${top.currency}/${bot.currency}</div>
-      <div class="tc-why"><span style="color:${cT}">${top.currency}</span> ${(top.score>=0?'+':'')}${top.score.toFixed(5)} · <span style="color:${cB}">${bot.currency}</span> ${bot.score.toFixed(5)}</div>
+      <div class="tc-why"><span style="color:${COLS[top.currency]}">${top.currency}</span> ${top.score>=0?'+':''}${top.score.toFixed(4)}% · <span style="color:${COLS[bot.currency]}">${bot.currency}</span> ${bot.score.toFixed(4)}%</div>
     </div>
     <div class="tcard sell">
       <div class="tc-lbl" style="color:var(--red)">▼ VENDER</div>
       <div class="tc-pair" style="color:var(--red)">${bot.currency}/${top.currency}</div>
-      <div class="tc-why">Spread: ${sp} · divergência slope</div>
+      <div class="tc-why">Spread: ${sp}% · máxima divergência</div>
     </div>`;
 }
 
@@ -499,95 +555,113 @@ function renderPairs() {
   const tf = S.activeTF === 'ALL' ? 'M15' : S.activeTF;
   const d  = S.data[tf];
   const pg = document.getElementById('pair-grid');
-  if (!d || !d.pairs) { pg.innerHTML = '<div style="color:var(--dim);font-size:9px;grid-column:1/-1">Aguardando...</div>'; return; }
-  const top = d.pairs.filter(p => p.ok).sort((a,b) => Math.abs(b.score) - Math.abs(a.score)).slice(0, 12);
+  if (!d?.pairs) { pg.innerHTML='<div style="color:var(--dim);font-size:9px;grid-column:1/-1">Aguardando...</div>'; return; }
+  const top = d.pairs.filter(p=>p.ok).sort((a,b)=>Math.abs(b.score)-Math.abs(a.score)).slice(0,12);
   pg.innerHTML = top.map(p => {
-    const isPos = p.score >= 0;
-    const col   = isPos ? 'var(--green)' : 'var(--red)';
-    const sign  = isPos ? '+' : '';
-    const name  = p.ticker.replace('=X','');
-    return `<div class="pcell">
-      <span class="pname">${name}</span>
-      <span class="pval" style="color:${col}">${sign}${p.score.toFixed(4)}</span>
+    const isPos = p.score>=0, col2 = isPos?'var(--green)':'var(--red)';
+    return `<div class="pc">
+      <span class="pn">${p.ticker.replace('=X','')}</span>
+      <span class="pv" style="color:${col2}">${isPos?'+':''}${p.score.toFixed(4)}%</span>
     </div>`;
   }).join('');
 }
 
-// ═══════════════════════════════════
-// FETCH — ALL 5 TFs IN ONE CALL
-// ═══════════════════════════════════
-async function doFetch() {
-  const btn = document.getElementById('fetch-btn');
-  const fi  = document.getElementById('ficon');
-  const ov  = document.getElementById('overlay');
-  const st  = document.getElementById('status');
+// ═════════════════════════════════════════════
+// FETCH ALL TFs
+// ═════════════════════════════════════════════
+async function doFetchAll() {
+  const btn  = document.getElementById('fetch-btn');
+  const fi   = document.getElementById('ficon');
+  const ov   = document.getElementById('overlay');
   const prog = document.getElementById('ov-prog');
   const ovTF = document.getElementById('ov-tf');
+  const st   = document.getElementById('stxt');
+  const liveTag = document.getElementById('live-tag');
+  const refTag  = document.getElementById('refresh-tag');
 
-  btn.disabled = true;
-  fi.classList.add('spin');
+  btn.disabled = true; fi.classList.add('spin');
   ov.classList.remove('gone');
   prog.style.width = '5%';
-  ovTF.textContent = 'Conectando ao servidor...';
+  liveTag.style.display = 'none';
+  refTag.style.display  = 'block';
 
-  // Animate progress during long fetch
-  const tfs = ['D1','H4','H1','M30','M15'];
-  let progVal = 5;
-  const progInterval = setInterval(() => {
-    progVal = Math.min(progVal + 1, 92);
-    prog.style.width = progVal + '%';
-  }, 600);
-
-  // Update overlay TF label as we go
-  const tfLabels = ['Calculando D1...','Calculando H4...','Calculando H1...','Calculando M30...','Calculando M15...'];
-  let tfIdx = 0;
-  const tfInterval = setInterval(() => {
-    if (tfIdx < tfLabels.length) ovTF.textContent = tfLabels[tfIdx++];
-  }, 10000);
+  const steps = ['Calculando D1 (100 velas)…','Calculando H4 (100 velas)…','Calculando H1 (100 velas)…','Calculando M30 (100 velas)…','Calculando M15 (100 velas)…'];
+  let si = 0, progV = 5;
+  const pi = setInterval(()=>{ progV=Math.min(progV+1.2,92); prog.style.width=progV+'%'; },700);
+  const si2 = setInterval(()=>{ if(si<steps.length){ovTF.textContent=steps[si++];} },11000);
 
   try {
-    const r = await fetch('/api/css/all/multi', { signal: AbortSignal.timeout(150000) });
-    if (!r.ok) throw new Error('Server HTTP ' + r.status);
+    const r = await fetch('/api/css/all/multi', { signal: AbortSignal.timeout(160000) });
+    if (!r.ok) throw new Error('Server '+r.status);
     const d = await r.json();
-
     let ok = 0;
-    tfs.forEach(tf => {
-      if (d[tf] && !d[tf].error && d[tf].series) {
-        S.data[tf] = d[tf];
-        ok++;
-      } else if (d[tf]?.error) {
-        console.warn(tf, d[tf].error);
-      }
+    TFS.forEach(tf => {
+      if (d[tf]?.series && !d[tf].error) { S.data[tf]=d[tf]; ok++; }
     });
-
-    prog.style.width = '100%';
-    const now = new Date();
-    const ts  = [now.getHours(),now.getMinutes(),now.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
-    st.textContent = `✓ ${ok}/5 TFs carregados · ${ts} UTC · próximo em 4min`;
-    S.countdown = 240;
+    prog.style.width='100%';
+    const n=new Date();
+    const ts=[n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
+    st.textContent=`✓ ${ok}/5 TFs · ${ts} UTC · auto-refresh activo`;
+    S.countdown = 180; // 3 min countdown
+    scheduleAutoRefresh();
   } catch(e) {
-    st.textContent = 'Erro: ' + e.message;
-    console.error(e);
+    st.textContent='Erro: '+e.message; console.error(e);
   }
 
-  clearInterval(progInterval);
-  clearInterval(tfInterval);
-  setTimeout(() => ov.classList.add('gone'), 400);
-  btn.disabled = false;
-  fi.classList.remove('spin');
+  clearInterval(pi); clearInterval(si2);
+  setTimeout(()=>ov.classList.add('gone'),400);
+  btn.disabled=false; fi.classList.remove('spin');
+  liveTag.style.display='block'; refTag.style.display='none';
 
   refreshChart();
-  renderScores();
-  renderTrades();
-  renderPairs();
+  renderPanel();
 }
 
-// ═══════════════════════════════════
+// ═════════════════════════════════════════════
+// AUTO-REFRESH: each TF refreshes at its own interval
+// ═════════════════════════════════════════════
+function scheduleAutoRefresh() {
+  // Clear existing timers
+  Object.values(S.refreshTimers).forEach(t => clearTimeout(t));
+  S.refreshTimers = {};
+
+  TFS.forEach((tf, i) => {
+    const interval = REFRESH_INTERVAL[tf] || 5*60*1000;
+    // Stagger: first refresh slightly offset to avoid all hitting at once
+    const delay = interval + i * 15000;
+    S.refreshTimers[tf] = setTimeout(function repeat() {
+      refreshTF(tf);
+      S.refreshTimers[tf] = setTimeout(repeat, interval);
+    }, delay);
+  });
+}
+
+async function refreshTF(tf) {
+  const refTag = document.getElementById('refresh-tag');
+  refTag.style.display = 'block';
+  try {
+    const r = await fetch(`/api/css/${tf}`, { signal: AbortSignal.timeout(60000) });
+    if (!r.ok) throw new Error(`${tf} HTTP ${r.status}`);
+    const d = await r.json();
+    if (d.series && !d.error) {
+      S.data[tf] = d;
+      // If this is the active TF, update chart immediately
+      if (S.activeTF === tf || S.activeTF === 'ALL') {
+        refreshChart();
+      }
+      renderPanel();
+    }
+  } catch(e) { console.warn('Auto-refresh '+tf+' failed:', e.message); }
+  // Hide refreshing tag only if no other TFs are refreshing
+  refTag.style.display = 'none';
+}
+
+// ═════════════════════════════════════════════
 // INIT
-// ═══════════════════════════════════
+// ═════════════════════════════════════════════
 buildCurBtns();
 initChart();
-setTimeout(doFetch, 500);
+setTimeout(doFetchAll, 500);
 </script>
 </body>
 </html>
