@@ -6,6 +6,8 @@
 <title>CSS · Currency Slope Strength</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 <style>
 :root{
   --bg:#07090d;--bg2:#0c1017;--bg3:#111720;--bg4:#161e28;
@@ -65,7 +67,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12
 .body{display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0}
 
 /* ── CHART ──────────────────────────────── */
-.chart-col{flex-shrink:0;height:56%;display:flex;flex-direction:column;min-width:0;padding:8px 14px;gap:5px;overflow:hidden}
+.chart-col{flex-shrink:0;height:58%;display:flex;flex-direction:column;padding:10px 16px 8px;gap:6px;overflow:hidden}
+.chart-box canvas{cursor:crosshair !important}
 .chart-top{display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .chart-lbl{font-size:9px;color:var(--dim);letter-spacing:.1em}
 .tf-badge{font-size:11px;font-weight:600;color:var(--amber)}
@@ -80,18 +83,19 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12
 
 /* ── SCORE PANEL ─────────────────────────── */
 .score-col{flex:1;min-height:0;border-top:1px solid var(--border2);border-left:none;display:flex;flex-direction:column;overflow:hidden}
-.sc-hdr{padding:7px 12px;border-bottom:1px solid var(--border);font-size:9px;font-weight:600;color:var(--muted);letter-spacing:.12em;flex-shrink:0;display:flex;align-items:center;justify-content:space-between}
+.sc-hdr{padding:7px 16px;border-bottom:1px solid var(--border);font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.12em;flex-shrink:0;display:flex;align-items:center;justify-content:space-between}
 .sc-hdr-right{font-size:8px;color:var(--dim)}
-.sc-body{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(3,1fr);align-content:start;gap:0}
+.sc-body{flex:1;overflow-y:auto}
 
 /* ── SCORE SUMMARY BOX ───────────────────── */
 /* 
   This is the KEY feature: shows each currency's score across ALL timeframes
   + total sum. Like the "Live Scores" box in the reference image.
 */
-.summary-block{padding:8px 10px;border-bottom:1px solid var(--border)}
-.sb-title{font-size:9px;font-weight:600;color:var(--muted);letter-spacing:.1em;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
-.sb-cur-row{margin-bottom:4px;border-radius:4px;background:var(--bg3);padding:5px 8px;animation:fadeUp .2s ease-out both}
+.summary-block{padding:8px 12px 4px;border-bottom:1px solid var(--border)}
+.sb-title{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.1em;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
+.sb-cur-rows-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;margin-bottom:4px}
+.sb-cur-row{border-radius:4px;background:var(--bg3);padding:5px 8px;animation:fadeUp .2s ease-out both}
 .sb-cur-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
 .sb-cur-name{font-size:13px;font-weight:600}
 .sb-total{font-size:12px;font-weight:600}
@@ -129,7 +133,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12
 /* pair grid */
 .pair-wrap{border-top:1px solid var(--border);padding:5px 10px 8px;flex-shrink:0}
 .pair-ttl{font-size:8px;font-weight:600;color:var(--muted);letter-spacing:.1em;margin-bottom:4px}
-.pair-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px}
+.pair-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px}
 .pc{display:flex;justify-content:space-between;align-items:center;padding:2px 5px;border-radius:3px;background:var(--bg3);font-size:11px}
 .pn{color:var(--muted)}
 .pv{font-weight:500}
@@ -210,6 +214,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12
       <div class="tf-badge" id="tf-badge">M15</div>
     </div>
     <div class="legend" id="legend"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0;margin-top:-2px">
+      <div style="font-size:9px;color:var(--dim)">🖱 Scroll para zoom · Arrastar para pan · Duplo-clique para resetar</div>
+      <button onclick="resetZoom()" style="font-family:var(--mono);font-size:9px;padding:2px 8px;background:var(--bg3);border:1px solid var(--border2);border-radius:3px;color:var(--muted);cursor:pointer;letter-spacing:.06em" onmouseover="this.style.color='var(--amber)'" onmouseout="this.style.color='var(--muted)'">↺ RESET ZOOM</button>
+    </div>
     <div class="chart-box"><canvas id="chart"></canvas></div>
   </div>
 
@@ -226,11 +234,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12
         em cada TF + soma total.</span>
       </div>
     </div>
-    <div class="trade-wrap" id="trade-wrap" style="display:none">
+    <div class="trade-wrap" id="trade-wrap" style="display:none;position:absolute;pointer-events:none">
       <div class="trade-ttl">MELHOR TRADE · <span id="trade-tf-lbl">M15</span></div>
       <div id="trade-cards"></div>
     </div>
-    <div class="pair-wrap">
+    <div class="pair-wrap" style="display:none;position:absolute;pointer-events:none">
       <div class="pair-ttl">TOP PARES · ACTIVO</div>
       <div class="pair-grid" id="pair-grid">
         <div style="color:var(--dim);font-size:9px;grid-column:1/-1">Aguardando...</div>
@@ -321,6 +329,7 @@ function setTF(el, tf) {
 function initChart() {
   const ctx = document.getElementById('chart').getContext('2d');
   if (S.chart) { S.chart.destroy(); S.chart = null; }
+  ctx.canvas.addEventListener('dblclick', ()=>{ if(S.chart) S.chart.resetZoom(); });
   S.chart = new Chart(ctx, {
     type: 'line',
     data: { labels: [], datasets: CURS.map(c => ({
@@ -422,6 +431,36 @@ function renderPanel() {
 }
 
 // ─── SUMMARY: each currency × all TFs + SUM ──
+function buildTradeHTML() {
+  const tf = S.activeTF === 'ALL' ? 'M15' : S.activeTF;
+  const d  = S.data[tf];
+  if (!d?.ranked || d.ranked.length < 2) return '';
+  const top = d.ranked[0], bot = d.ranked[d.ranked.length - 1];
+  const sp  = (top.score - bot.score).toFixed(4);
+  return `<div style="margin-bottom:10px">
+    <div style="font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.1em;margin-bottom:6px">MELHOR TRADE · ${tf}</div>
+    <div class="tcard buy"><div class="tc-lbl" style="color:var(--green)">▲ COMPRAR</div>
+    <div class="tc-pair" style="color:var(--green)">${top.currency}/${bot.currency}</div>
+    <div class="tc-why"><span style="color:${COLS[top.currency]}">${top.currency}</span> ${top.score>=0?'+':''}${top.score.toFixed(4)}% · <span style="color:${COLS[bot.currency]}">${bot.currency}</span> ${bot.score.toFixed(4)}%</div></div>
+    <div class="tcard sell"><div class="tc-lbl" style="color:var(--red)">▼ VENDER</div>
+    <div class="tc-pair" style="color:var(--red)">${bot.currency}/${top.currency}</div>
+    <div class="tc-why">Spread: ${sp}% · divergência máxima</div></div>
+  </div>`;
+}
+
+function buildPairHTML() {
+  const tf = S.activeTF === 'ALL' ? 'M15' : S.activeTF;
+  const d  = S.data[tf];
+  if (!d?.pairs) return '';
+  const top = d.pairs.filter(p=>p.ok).sort((a,b)=>Math.abs(b.score)-Math.abs(a.score)).slice(0,12);
+  return `<div><div style="font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.1em;margin-bottom:6px">TOP PARES · ${tf}</div>
+    <div class="pair-grid">${top.map(p=>{
+      const isPos=p.score>=0,col=isPos?'var(--green)':'var(--red)';
+      return \`<div class="pc"><span class="pn">\${p.ticker.replace('=X','')}</span><span class="pv" style="color:\${col}">\${isPos?'+':''}\${p.score.toFixed(4)}%</span></div>\`;
+    }).join('')}</div>
+  </div>`;
+}
+
 function renderSummary() {
   // Check if we have any data
   const availTFs = TFS.filter(tf => S.data[tf]?.scores);
@@ -469,7 +508,13 @@ function renderSummary() {
   });
 
   html += `</div>`;
-  document.getElementById('sc-body').innerHTML = html + getTFBlocksHTML();
+  // Wrap in 3-col layout
+const col1 = `<div style="border-right:1px solid var(--border);padding:8px 12px;overflow:hidden">${html}</div>`;
+const col2 = `<div style="border-right:1px solid var(--border);padding:8px 12px;overflow:hidden"><div style="font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.1em;margin-bottom:8px">SCORES POR TIMEFRAME</div>${getTFBlocksHTML()}</div>`;
+const tradeHtml = buildTradeHTML();
+const pairHtml  = buildPairHTML();
+const col3 = `<div style="padding:8px 12px;overflow:hidden">${tradeHtml}${pairHtml}</div>`;
+document.getElementById('sc-body').innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;height:100%">${col1}${col2}${col3}</div>`;
 
   // update timestamp
   const anyTs = Object.values(S.data).find(d=>d?.ts)?.ts;
@@ -659,6 +704,7 @@ async function refreshTF(tf) {
 // ═════════════════════════════════════════════
 // INIT
 // ═════════════════════════════════════════════
+function resetZoom(){if(S.chart)S.chart.resetZoom();}
 buildCurBtns();
 initChart();
 setTimeout(doFetchAll, 500);
