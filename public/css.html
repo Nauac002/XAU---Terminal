@@ -6,7 +6,6 @@
 <title>CSS · Currency Slope Strength</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-
 <style>
 :root{
   --bg:#07090d;--bg2:#0c1017;--bg3:#111720;--bg4:#161e28;
@@ -66,8 +65,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12
 .body{display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0}
 
 /* ── CHART ──────────────────────────────── */
-.chart-col{flex-shrink:0;height:58%;display:flex;flex-direction:column;padding:10px 16px 8px;gap:6px;overflow:hidden}
-.chart-box canvas{cursor:crosshair !important}
+.chart-col{flex-shrink:0;height:56%;display:flex;flex-direction:column;min-width:0;padding:8px 14px;gap:5px;overflow:hidden}
 .chart-top{display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .chart-lbl{font-size:9px;color:var(--dim);letter-spacing:.1em}
 .tf-badge{font-size:11px;font-weight:600;color:var(--amber)}
@@ -82,19 +80,18 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12
 
 /* ── SCORE PANEL ─────────────────────────── */
 .score-col{flex:1;min-height:0;border-top:1px solid var(--border2);border-left:none;display:flex;flex-direction:column;overflow:hidden}
-.sc-hdr{padding:7px 16px;border-bottom:1px solid var(--border);font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.12em;flex-shrink:0;display:flex;align-items:center;justify-content:space-between}
+.sc-hdr{padding:7px 12px;border-bottom:1px solid var(--border);font-size:9px;font-weight:600;color:var(--muted);letter-spacing:.12em;flex-shrink:0;display:flex;align-items:center;justify-content:space-between}
 .sc-hdr-right{font-size:8px;color:var(--dim)}
-.sc-body{flex:1;overflow-y:auto}
+.sc-body{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(3,1fr);align-content:start;gap:0}
 
 /* ── SCORE SUMMARY BOX ───────────────────── */
 /* 
   This is the KEY feature: shows each currency's score across ALL timeframes
   + total sum. Like the "Live Scores" box in the reference image.
 */
-.summary-block{padding:8px 12px 4px;border-bottom:1px solid var(--border)}
-.sb-title{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.1em;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
-.sb-cur-rows-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;margin-bottom:4px}
-.sb-cur-row{border-radius:4px;background:var(--bg3);padding:5px 8px;animation:fadeUp .2s ease-out both}
+.summary-block{padding:8px 10px;border-bottom:1px solid var(--border)}
+.sb-title{font-size:9px;font-weight:600;color:var(--muted);letter-spacing:.1em;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
+.sb-cur-row{margin-bottom:4px;border-radius:4px;background:var(--bg3);padding:5px 8px;animation:fadeUp .2s ease-out both}
 .sb-cur-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
 .sb-cur-name{font-size:13px;font-weight:600}
 .sb-total{font-size:12px;font-weight:600}
@@ -132,7 +129,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12
 /* pair grid */
 .pair-wrap{border-top:1px solid var(--border);padding:5px 10px 8px;flex-shrink:0}
 .pair-ttl{font-size:8px;font-weight:600;color:var(--muted);letter-spacing:.1em;margin-bottom:4px}
-.pair-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+.pair-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px}
 .pc{display:flex;justify-content:space-between;align-items:center;padding:2px 5px;border-radius:3px;background:var(--bg3);font-size:11px}
 .pn{color:var(--muted)}
 .pv{font-weight:500}
@@ -213,10 +210,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12
       <div class="tf-badge" id="tf-badge">M15</div>
     </div>
     <div class="legend" id="legend"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0;margin-top:-2px">
-      <div style="font-size:9px;color:var(--dim)">🖱 Scroll para zoom · Arrastar para pan · Duplo-clique para resetar</div>
-      <button onclick="resetZoom()" style="font-family:var(--mono);font-size:9px;padding:2px 8px;background:var(--bg3);border:1px solid var(--border2);border-radius:3px;color:var(--muted);cursor:pointer;letter-spacing:.06em" onmouseover="this.style.color='var(--amber)'" onmouseout="this.style.color='var(--muted)'">↺ RESET ZOOM</button>
-    </div>
     <div class="chart-box"><canvas id="chart"></canvas></div>
   </div>
 
@@ -233,11 +226,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12
         em cada TF + soma total.</span>
       </div>
     </div>
-    <div class="trade-wrap" id="trade-wrap" style="display:none;position:absolute;pointer-events:none">
+    <div class="trade-wrap" id="trade-wrap" style="display:none">
       <div class="trade-ttl">MELHOR TRADE · <span id="trade-tf-lbl">M15</span></div>
       <div id="trade-cards"></div>
     </div>
-    <div class="pair-wrap" style="display:none;position:absolute;pointer-events:none">
+    <div class="pair-wrap">
       <div class="pair-ttl">TOP PARES · ACTIVO</div>
       <div class="pair-grid" id="pair-grid">
         <div style="color:var(--dim);font-size:9px;grid-column:1/-1">Aguardando...</div>
@@ -399,8 +392,6 @@ function refreshChart() {
     S.chart.data.datasets[i].data   = d.series[c] || [];
     S.chart.data.datasets[i].hidden = !S.vis.has(c);
   });
-  // Reset zoom indices if not zoomed
-  if(!ZP.zoomed){ ZP.minIdx=0; ZP.maxIdx=(d.labels.length-1); }
   S.chart.update('active');
   buildLegend(d);
 }
@@ -431,36 +422,6 @@ function renderPanel() {
 }
 
 // ─── SUMMARY: each currency × all TFs + SUM ──
-function buildTradeHTML() {
-  const tf = S.activeTF === 'ALL' ? 'M15' : S.activeTF;
-  const d  = S.data[tf];
-  if (!d?.ranked || d.ranked.length < 2) return '';
-  const top = d.ranked[0], bot = d.ranked[d.ranked.length - 1];
-  const sp  = (top.score - bot.score).toFixed(4);
-  return `<div style="margin-bottom:10px">
-    <div style="font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.1em;margin-bottom:6px">MELHOR TRADE · ${tf}</div>
-    <div class="tcard buy"><div class="tc-lbl" style="color:var(--green)">▲ COMPRAR</div>
-    <div class="tc-pair" style="color:var(--green)">${top.currency}/${bot.currency}</div>
-    <div class="tc-why"><span style="color:${COLS[top.currency]}">${top.currency}</span> ${top.score>=0?'+':''}${top.score.toFixed(4)}% · <span style="color:${COLS[bot.currency]}">${bot.currency}</span> ${bot.score.toFixed(4)}%</div></div>
-    <div class="tcard sell"><div class="tc-lbl" style="color:var(--red)">▼ VENDER</div>
-    <div class="tc-pair" style="color:var(--red)">${bot.currency}/${top.currency}</div>
-    <div class="tc-why">Spread: ${sp}% · divergência máxima</div></div>
-  </div>`;
-}
-
-function buildPairHTML() {
-  const tf = S.activeTF === 'ALL' ? 'M15' : S.activeTF;
-  const d  = S.data[tf];
-  if (!d?.pairs) return '';
-  const top = d.pairs.filter(p=>p.ok).sort((a,b)=>Math.abs(b.score)-Math.abs(a.score)).slice(0,12);
-  return `<div><div style="font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.1em;margin-bottom:6px">TOP PARES · ${tf}</div>
-    <div class="pair-grid">${top.map(p=>{
-      const isPos=p.score>=0,col=isPos?'var(--green)':'var(--red)';
-      return \`<div class="pc"><span class="pn">\${p.ticker.replace('=X','')}</span><span class="pv" style="color:\${col}">\${isPos?'+':''}\${p.score.toFixed(4)}%</span></div>\`;
-    }).join('')}</div>
-  </div>`;
-}
-
 function renderSummary() {
   // Check if we have any data
   const availTFs = TFS.filter(tf => S.data[tf]?.scores);
@@ -508,13 +469,7 @@ function renderSummary() {
   });
 
   html += `</div>`;
-  // Wrap in 3-col layout
-const col1 = `<div style="border-right:1px solid var(--border);padding:8px 12px;overflow:hidden">${html}</div>`;
-const col2 = `<div style="border-right:1px solid var(--border);padding:8px 12px;overflow:hidden"><div style="font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.1em;margin-bottom:8px">SCORES POR TIMEFRAME</div>${getTFBlocksHTML()}</div>`;
-const tradeHtml = buildTradeHTML();
-const pairHtml  = buildPairHTML();
-const col3 = `<div style="padding:8px 12px;overflow:hidden">${tradeHtml}${pairHtml}</div>`;
-document.getElementById('sc-body').innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;height:100%">${col1}${col2}${col3}</div>`;
+  document.getElementById('sc-body').innerHTML = html + getTFBlocksHTML();
 
   // update timestamp
   const anyTs = Object.values(S.data).find(d=>d?.ts)?.ts;
@@ -624,44 +579,39 @@ async function doFetchAll() {
   const liveTag = document.getElementById('live-tag');
   const refTag  = document.getElementById('refresh-tag');
 
-  btn.disabled=true; fi.classList.add('spin');
+  btn.disabled = true; fi.classList.add('spin');
   ov.classList.remove('gone');
-  prog.style.width='5%';
-  liveTag.style.display='none'; refTag.style.display='block';
+  prog.style.width = '5%';
+  liveTag.style.display = 'none';
+  refTag.style.display  = 'block';
 
-  // Safety: always close overlay after 95s
-  const safetyTimer=setTimeout(()=>{
-    ov.classList.add('gone');
-    btn.disabled=false; fi.classList.remove('spin');
-    liveTag.style.display='block'; refTag.style.display='none';
-    st.textContent='Timeout — tente novamente';
-  }, 95000);
+  const steps = ['Calculando D1 (100 velas)…','Calculando H4 (100 velas)…','Calculando H1 (100 velas)…','Calculando M30 (100 velas)…','Calculando M15 (100 velas)…'];
+  let si = 0, progV = 5;
+  const pi = setInterval(()=>{ progV=Math.min(progV+1.2,92); prog.style.width=progV+'%'; },700);
+  const si2 = setInterval(()=>{ if(si<steps.length){ovTF.textContent=steps[si++];} },11000);
 
-  const steps=['…D1','…H4','…H1','…M30','…M15'];
-  let si=0,progV=5;
-  const pi=setInterval(()=>{progV=Math.min(progV+1.2,92);prog.style.width=progV+'%';},700);
-  const si2=setInterval(()=>{if(si<steps.length)ovTF.textContent='Calculando '+steps[si++];},13000);
-
-  try{
-    const r=await fetch('/api/css/all/multi',{signal:AbortSignal.timeout(150000)});
-    if(!r.ok)throw new Error('Server '+r.status);
-    const d=await r.json();
-    let ok=0;
-    TFS.forEach(tf=>{if(d[tf]?.series&&!d[tf].error){S.data[tf]=d[tf];ok++;}});
+  try {
+    const r = await fetch('/api/css/all/multi', { signal: AbortSignal.timeout(160000) });
+    if (!r.ok) throw new Error('Server '+r.status);
+    const d = await r.json();
+    let ok = 0;
+    TFS.forEach(tf => {
+      if (d[tf]?.series && !d[tf].error) { S.data[tf]=d[tf]; ok++; }
+    });
     prog.style.width='100%';
-    const n=new Date(),ts=[n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
-    st.textContent='✓ '+ok+'/5 TFs · '+ts+' UTC · auto-refresh activo';
-    S.countdown=180;
+    const n=new Date();
+    const ts=[n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
+    st.textContent=`✓ ${ok}/5 TFs · ${ts} UTC · auto-refresh activo`;
+    S.countdown = 180; // 3 min countdown
     scheduleAutoRefresh();
-  }catch(e){
-    st.textContent='Erro: '+e.message;
-    console.error(e);
+  } catch(e) {
+    st.textContent='Erro: '+e.message; console.error(e);
   }
 
-  clearInterval(pi);clearInterval(si2);clearTimeout(safetyTimer);
+  clearInterval(pi); clearInterval(si2);
   setTimeout(()=>ov.classList.add('gone'),400);
-  btn.disabled=false;fi.classList.remove('spin');
-  liveTag.style.display='block';refTag.style.display='none';
+  btn.disabled=false; fi.classList.remove('spin');
+  liveTag.style.display='block'; refTag.style.display='none';
 
   refreshChart();
   renderPanel();
@@ -709,100 +659,6 @@ async function refreshTF(tf) {
 // ═════════════════════════════════════════════
 // INIT
 // ═════════════════════════════════════════════
-// ── ZOOM & PAN (manual, no library) ─────────────────────────────
-const ZP = { dragging:false, startX:0, startIdx:0, minIdx:0, maxIdx:0, zoomed:false };
-
-function resetZoom(){
-  if(!S.chart)return;
-  ZP.zoomed=false;
-  const tf=S.activeTF==='ALL'?'M15':S.activeTF;
-  const d=S.data[tf];
-  const n=d?.labels?.length||100;
-  ZP.minIdx=0; ZP.maxIdx=n-1;
-  applyZoom(0, n-1);
-}
-
-function applyZoom(minI, maxI){
-  if(!S.chart)return;
-  const tf=S.activeTF==='ALL'?'M15':S.activeTF;
-  const d=S.data[tf];
-  if(!d?.labels) return;
-  const n=d.labels.length;
-  const lo=Math.max(0,Math.round(minI));
-  const hi=Math.min(n-1,Math.round(maxI));
-  if(hi-lo<3) return;
-  ZP.minIdx=lo; ZP.maxIdx=hi;
-  S.chart.options.scales.x.min=lo;
-  S.chart.options.scales.x.max=hi;
-  S.chart.update('none');
-}
-
-function initZoomPan(canvas){
-  // Wheel = zoom
-  canvas.addEventListener('wheel',(e)=>{
-    e.preventDefault();
-    if(!S.chart)return;
-    const tf=S.activeTF==='ALL'?'M15':S.activeTF;
-    const d=S.data[tf]; if(!d?.labels)return;
-    const n=d.labels.length;
-    const lo=ZP.minIdx||0, hi=ZP.maxIdx||(n-1);
-    const range=hi-lo;
-    const factor=e.deltaY>0?1.15:0.87; // scroll down=zoom out, up=zoom in
-    const newRange=Math.round(range*factor);
-    const mid=(lo+hi)/2;
-    const newLo=Math.max(0,Math.round(mid-newRange/2));
-    const newHi=Math.min(n-1,Math.round(mid+newRange/2));
-    ZP.zoomed=true;
-    applyZoom(newLo, newHi);
-  },{passive:false});
-
-  // Mouse drag = pan
-  canvas.addEventListener('mousedown',(e)=>{
-    if(e.button!==0)return;
-    ZP.dragging=true;
-    ZP.startX=e.clientX;
-    ZP.startIdx=ZP.minIdx;
-    canvas.style.cursor='grabbing';
-  });
-  window.addEventListener('mousemove',(e)=>{
-    if(!ZP.dragging||!S.chart)return;
-    const tf=S.activeTF==='ALL'?'M15':S.activeTF;
-    const d=S.data[tf]; if(!d?.labels)return;
-    const n=d.labels.length;
-    const w=canvas.clientWidth;
-    const range=ZP.maxIdx-ZP.minIdx;
-    const dx=e.clientX-ZP.startX;
-    const pxPerPt=w/range;
-    const shift=Math.round(-dx/pxPerPt);
-    const newLo=Math.max(0,ZP.startIdx+shift);
-    const newHi=Math.min(n-1,newLo+range);
-    applyZoom(newLo, newHi);
-  });
-  window.addEventListener('mouseup',()=>{
-    ZP.dragging=false;
-    canvas.style.cursor='crosshair';
-  });
-
-  // Touch pan
-  let lastTouchX=0;
-  canvas.addEventListener('touchstart',(e)=>{lastTouchX=e.touches[0].clientX;ZP.startIdx=ZP.minIdx;},{passive:true});
-  canvas.addEventListener('touchmove',(e)=>{
-    if(!S.chart)return;
-    const tf=S.activeTF==='ALL'?'M15':S.activeTF;
-    const d=S.data[tf];if(!d?.labels)return;
-    const n=d.labels.length,w=canvas.clientWidth;
-    const range=ZP.maxIdx-ZP.minIdx;
-    const dx=e.touches[0].clientX-lastTouchX;
-    const pxPerPt=w/range;
-    const shift=Math.round(-dx/pxPerPt);
-    const newLo=Math.max(0,(ZP.startIdx||0)+shift);
-    const newHi=Math.min(n-1,newLo+range);
-    applyZoom(newLo,newHi);
-  },{passive:true});
-
-  // Double click = reset
-  canvas.addEventListener('dblclick',()=>resetZoom());
-}
 buildCurBtns();
 initChart();
 setTimeout(doFetchAll, 500);
