@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSS · Currency Slope Strength</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --bg:#07090d;--bg2:#0c1017;--bg3:#111720;--bg4:#161e28;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.13);
+  --text:#dde4f0;--muted:#5a6680;--dim:#2a3448;
+  --green:#19e6a0;--red:#ff4d6d;--amber:#f5a623;--blue:#38b6ff;--purple:#a78bfa;
+  --mono:'IBM Plex Mono',monospace;
+  --usd:#60a5fa;--eur:#34d399;--gbp:#a78bfa;
+  --jpy:#f87171;--chf:#fbbf24;--cad:#f97316;
+  --aud:#22d3ee;--nzd:#e879f9;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12px;line-height:1.5;display:flex;flex-direction:column}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── HEADER ── */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;border-bottom:1px solid var(--border2);background:var(--bg2);flex-shrink:0}
+.logo{font-size:13px;font-weight:600;letter-spacing:.1em}
+.logo .c1{color:var(--amber)}.logo .c2{color:var(--muted);font-weight:300}
+.hdr-mid{display:flex;align-items:center;gap:8px}
+.htag{font-size:9px;padding:2px 7px;border-radius:3px;border:1px solid var(--border2);color:var(--muted);letter-spacing:.07em}
+.htag.live{border-color:rgba(25,230,160,.4);color:var(--green)}
+.hdr-right{display:flex;align-items:center;gap:12px}
+.clock{font-size:11px;color:var(--muted)}
+.ldot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1.4s infinite}
+.back-link{font-size:9px;color:var(--muted);text-decoration:none;padding:2px 8px;border:1px solid var(--border);border-radius:3px;letter-spacing:.07em;transition:color .15s}
+.back-link:hover{color:var(--amber);border-color:rgba(245,166,35,.4)}
+
+/* ── TOOLBAR ── */
+.toolbar{display:flex;align-items:center;gap:10px;padding:7px 16px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+.fetch-btn{display:flex;align-items:center;gap:6px;padding:5px 13px;background:rgba(25,230,160,.1);border:1px solid var(--green);border-radius:4px;color:var(--green);font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;cursor:pointer;transition:all .2s;white-space:nowrap}
+.fetch-btn:hover{background:rgba(25,230,160,.2)}
+.fetch-btn:disabled{opacity:.4;cursor:not-allowed}
+.ficon{width:11px;height:11px;flex-shrink:0}
+.spin{animation:spin .7s linear infinite}
+.divider{width:1px;height:20px;background:var(--border2);flex-shrink:0}
+.group-label{font-size:9px;color:var(--dim);letter-spacing:.08em;white-space:nowrap}
+.tf-group{display:flex;gap:3px}
+.btn{font-family:var(--mono);font-size:9px;font-weight:600;padding:3px 9px;border-radius:3px;border:1px solid var(--border2);background:var(--bg3);color:var(--muted);cursor:pointer;transition:all .15s;letter-spacing:.06em}
+.btn:hover{border-color:var(--amber);color:var(--amber)}
+.btn.active{background:rgba(245,166,35,.15);border-color:var(--amber);color:var(--amber)}
+.btn.multi-tf{border-color:rgba(167,139,250,.3);color:var(--purple)}
+.btn.multi-tf.active{background:rgba(167,139,250,.15);border-color:var(--purple);color:var(--purple)}
+.cur-group{display:flex;gap:3px;flex-wrap:wrap}
+.cbtn{font-family:var(--mono);font-size:9px;font-weight:600;padding:3px 7px;border-radius:3px;border:1px solid;cursor:pointer;transition:all .15s;letter-spacing:.05em}
+.cbtn.off{opacity:.25;filter:grayscale(1)}
+.status{font-size:9px;color:var(--muted);flex:1;text-align:right}
+.cdown{font-size:9px;color:var(--dim);white-space:nowrap}
+
+/* ── BODY LAYOUT ── */
+.body{display:flex;flex:1;overflow:hidden;min-height:0}
+
+/* ── CHART AREA ── */
+.chart-col{flex:1;display:flex;flex-direction:column;min-width:0;padding:10px 14px;gap:6px;overflow:hidden}
+.chart-meta{display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.chart-label{font-size:9px;color:var(--dim);letter-spacing:.1em}
+.active-tf-badge{font-size:11px;font-weight:600;color:var(--amber);letter-spacing:.08em}
+.chart-legend{display:flex;gap:10px;flex-wrap:wrap;flex-shrink:0}
+.leg{display:flex;align-items:center;gap:4px;font-size:10px;cursor:pointer;transition:opacity .15s;user-select:none}
+.leg.off{opacity:.25}
+.leg-line{width:18px;height:2px;border-radius:1px;flex-shrink:0}
+.leg-name{font-weight:600}
+.leg-score{color:var(--muted);font-size:9px;margin-left:2px}
+.chart-box{flex:1;position:relative;min-height:0}
+.chart-box canvas{position:absolute;inset:0;width:100%!important;height:100%!important}
+
+/* ── SCORE COLUMN ── */
+.score-col{width:248px;flex-shrink:0;border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sc-header{padding:8px 12px;border-bottom:1px solid var(--border);font-size:9px;font-weight:600;color:var(--muted);letter-spacing:.12em;flex-shrink:0}
+.sc-body{flex:1;overflow-y:auto;padding-bottom:8px}
+
+/* TF block */
+.tf-block{border-bottom:1px solid var(--border)}
+.tf-block:last-child{border-bottom:none}
+.tf-block-hdr{display:flex;align-items:center;justify-content:space-between;padding:6px 12px 2px;cursor:pointer;user-select:none}
+.tf-block-hdr:hover{background:rgba(255,255,255,.02)}
+.tf-name{font-size:9px;font-weight:600;color:var(--amber);letter-spacing:.1em}
+.tf-meta{font-size:8px;color:var(--dim)}
+.tf-rows{padding-bottom:4px}
+.sc-row{display:flex;align-items:center;gap:5px;padding:3px 12px;animation:fadeUp .25s ease-out both}
+.sc-row:hover{background:var(--bg3)}
+.sc-rank{font-size:8px;color:var(--dim);width:12px;text-align:center;flex-shrink:0}
+.sc-cur{font-size:11px;font-weight:600;width:26px;flex-shrink:0}
+.sc-bar-wrap{flex:1;height:5px;background:var(--bg4);border-radius:2px;overflow:hidden}
+.sc-bar{height:100%;border-radius:2px;transition:width .7s cubic-bezier(.4,0,.2,1)}
+.sc-val{font-size:10px;font-weight:500;width:58px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.sc-arr{font-size:9px;width:10px;text-align:center;flex-shrink:0}
+
+/* trade cards */
+.trade-block{padding:8px 10px;border-top:1px solid var(--border);flex-shrink:0}
+.trade-lbl{font-size:8px;font-weight:600;color:var(--muted);letter-spacing:.1em;margin-bottom:5px}
+.tcard{border-radius:4px;padding:6px 9px;margin-bottom:4px;border-left:3px solid}
+.tcard:last-child{margin-bottom:0}
+.tcard.buy{background:rgba(25,230,160,.06);border-color:rgba(25,230,160,.4)}
+.tcard.sell{background:rgba(255,77,109,.06);border-color:rgba(255,77,109,.4)}
+.tcard-lbl{font-size:8px;font-weight:600;letter-spacing:.08em;margin-bottom:2px}
+.tcard-pair{font-size:13px;font-weight:600;letter-spacing:.04em}
+.tcard-why{font-size:9px;color:var(--muted);margin-top:1px;line-height:1.5}
+
+/* pair table */
+.pair-block{padding:6px 10px 8px;border-top:1px solid var(--border);flex-shrink:0}
+.pair-lbl{font-size:8px;font-weight:600;color:var(--muted);letter-spacing:.1em;margin-bottom:5px}
+.pair-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+.pair-cell{display:flex;justify-content:space-between;align-items:center;padding:2px 5px;border-radius:3px;background:var(--bg3);font-size:9px}
+.pair-name{color:var(--muted)}
+.pair-val{font-weight:500}
+
+/* loading overlay */
+.overlay{position:fixed;inset:0;background:rgba(7,9,13,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:500;transition:opacity .3s}
+.overlay.gone{opacity:0;pointer-events:none}
+.spin-big{width:28px;height:28px;border:2px solid rgba(255,255,255,.1);border-top-color:var(--amber);border-radius:50%;animation:spin .65s linear infinite}
+.overlay-msg{font-size:12px;color:var(--muted);letter-spacing:.04em}
+.overlay-tf{font-size:10px;color:var(--amber)}
+
+/* scrollbar */
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+@media(max-width:640px){.score-col{width:200px}.sc-val{width:48px}}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="overlay" id="overlay">
+  <div class="spin-big"></div>
+  <div class="overlay-msg">Calculando Currency Slope Strength...</div>
+  <div class="overlay-tf" id="ov-tf">D1 → H4 → H1 → M30 → M15</div>
+</div>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="logo"><span class="c1">CSS</span> <span class="c2">· Currency Slope Strength</span></div>
+    <div class="hdr-mid">
+      <div class="htag">TMA SLOPE · 28 PARES</div>
+      <div class="htag live">● LIVE</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <a href="/" class="back-link">← XAU TERMINAL</a>
+    <div class="clock" id="clock">--:--:--</div>
+    <div class="ldot"></div>
+  </div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <button class="fetch-btn" id="fetch-btn" onclick="doFetch()">
+    <svg class="ficon" id="ficon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.66 0 3-4.03 3-9s-1.34-9-3-9"/>
+    </svg>
+    BUSCAR DADOS
+  </button>
+
+  <div class="divider"></div>
+  <div class="group-label">TIMEFRAME</div>
+  <div class="tf-group" id="tf-btns">
+    <button class="btn" data-tf="D1"  onclick="setTF(this,'D1')">D1</button>
+    <button class="btn" data-tf="H4"  onclick="setTF(this,'H4')">H4</button>
+    <button class="btn" data-tf="H1"  onclick="setTF(this,'H1')">H1</button>
+    <button class="btn" data-tf="M30" onclick="setTF(this,'M30')">M30</button>
+    <button class="btn active" data-tf="M15" onclick="setTF(this,'M15')">M15</button>
+    <button class="btn multi-tf" data-tf="ALL" onclick="setTF(this,'ALL')">ALL TF</button>
+  </div>
+
+  <div class="divider"></div>
+  <div class="group-label">MOEDAS</div>
+  <div class="cur-group" id="cur-btns"></div>
+
+  <div class="status" id="status">Pressione Buscar Dados para iniciar →</div>
+  <div class="cdown" id="cdown"></div>
+</div>
+
+<!-- BODY -->
+<div class="body">
+
+  <!-- CHART -->
+  <div class="chart-col">
+    <div class="chart-meta">
+      <div class="chart-label">SLOPE STRENGTH — EVOLUÇÃO HISTÓRICA DA SESSÃO</div>
+      <div class="active-tf-badge" id="tf-badge">M15</div>
+    </div>
+    <div class="chart-legend" id="legend"></div>
+    <div class="chart-box">
+      <canvas id="chart"></canvas>
+    </div>
+  </div>
+
+  <!-- SCORE COLUMN -->
+  <div class="score-col">
+    <div class="sc-header">SCORES POR TIMEFRAME</div>
+    <div class="sc-body" id="sc-body">
+      <div style="padding:16px 12px;color:var(--dim);font-size:11px;line-height:1.7">
+        Aguardando primeiro fetch...<br>
+        <span style="font-size:9px">Pode levar 20–40 segundos<br>enquanto calcula os 5 TFs.</span>
+      </div>
+    </div>
+    <div class="trade-block" id="trade-block" style="display:none">
+      <div class="trade-lbl">MELHOR TRADE — <span id="trade-tf-lbl">M15</span></div>
+      <div id="trade-cards"></div>
+    </div>
+    <div class="pair-block">
+      <div class="pair-lbl">TOP PARES — SLOPE ACTIVO</div>
+      <div class="pair-grid" id="pair-grid">
+        <div style="color:var(--dim);font-size:9px;grid-column:1/-1;padding:4px 0">Aguardando...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════
+const COLS = {
+  USD:'#60a5fa',EUR:'#34d399',GBP:'#a78bfa',
+  JPY:'#f87171',CHF:'#fbbf24',CAD:'#f97316',
+  AUD:'#22d3ee',NZD:'#e879f9'
+};
+const CURS = ['USD','EUR','GBP','JPY','CHF','CAD','AUD','NZD'];
+const TFS  = ['D1','H4','H1','M30','M15'];
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+const S = {
+  data: {},
+  history: {},   // tf → cur → [scores]
+  activeTF: 'M15',
+  vis: new Set(CURS),
+  chart: null,
+  countdown: 0,
+  maxHist: 80,
+};
+
+// ═══════════════════════════════════════════
+// CLOCK
+// ═══════════════════════════════════════════
+setInterval(()=>{
+  const n=new Date();
+  document.getElementById('clock').textContent=
+    [n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':')+' UTC';
+  if(S.countdown>0){
+    S.countdown--;
+    document.getElementById('cdown').textContent='Auto: '+S.countdown+'s';
+    if(S.countdown===0)doFetch();
+  }
+},1000);
+
+// ═══════════════════════════════════════════
+// CURRENCY BUTTONS
+// ═══════════════════════════════════════════
+function buildCurBtns(){
+  document.getElementById('cur-btns').innerHTML=CURS.map(c=>{
+    const col=COLS[c];
+    return `<button class="cbtn" id="cb-${c}" style="color:${col};border-color:${col}40;background:${col}12"
+      onclick="toggleCur('${c}')">${c}</button>`;
+  }).join('');
+}
+function toggleCur(c){
+  if(S.vis.has(c)){if(S.vis.size<=2)return;S.vis.delete(c);document.getElementById('cb-'+c).classList.add('off');}
+  else{S.vis.add(c);document.getElementById('cb-'+c).classList.remove('off');}
+  refreshChart();
+}
+
+// ═══════════════════════════════════════════
+// TF SELECTOR
+// ═══════════════════════════════════════════
+function setTF(el,tf){
+  S.activeTF=tf;
+  document.querySelectorAll('.tf-btns .btn, #tf-btns .btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tf-badge').textContent=tf;
+  refreshChart();
+  renderScores();
+  renderTrades();
+  renderPairs();
+}
+
+// ═══════════════════════════════════════════
+// CHART
+// ═══════════════════════════════════════════
+function initChart(){
+  const ctx=document.getElementById('chart').getContext('2d');
+  if(S.chart){S.chart.destroy();}
+  S.chart=new Chart(ctx,{
+    type:'line',
+    data:{labels:[],datasets:CURS.map(c=>({
+      label:c,data:[],
+      borderColor:COLS[c],backgroundColor:'transparent',
+      borderWidth:1.5,pointRadius:0,pointHoverRadius:3,
+      tension:0.35,hidden:!S.vis.has(c),
+    }))},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      animation:{duration:250},
+      interaction:{intersect:false,mode:'index'},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'#0c1017',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,
+          titleColor:'#5a6680',bodyColor:'#dde4f0',
+          titleFont:{family:"'IBM Plex Mono'",size:9},
+          bodyFont:{family:"'IBM Plex Mono'",size:10},
+          callbacks:{label:ctx=>{const v=ctx.parsed.y,s=v>=0?'+':'';return ` ${ctx.dataset.label}: ${s}${v.toFixed(6)}`}}
+        },
+      },
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#2a3448',font:{family:"'IBM Plex Mono'",size:8},maxTicksLimit:12},border:{color:'rgba(255,255,255,0.06)'}},
+        y:{
+          grid:{color:ctx=>ctx.tick.value===0?'rgba(255,255,255,0.18)':'rgba(255,255,255,0.04)'},
+          ticks:{color:'#5a6680',font:{family:"'IBM Plex Mono'",size:8},callback:v=>(v>=0?'+':'')+v.toFixed(4)},
+          border:{color:'rgba(255,255,255,0.06)'}
+        }
+      }
+    }
+  });
+}
+
+function refreshChart(){
+  if(!S.chart)return;
+  const tf=S.activeTF==='ALL'?'M15':S.activeTF;
+  const hist=S.history[tf]||{};
+  const len=Math.max(...CURS.map(c=>(hist[c]||[]).length),1);
+  S.chart.data.labels=Array.from({length:len},(_,i)=>i===len-1?'NOW':`-${len-1-i}`);
+  CURS.forEach((c,i)=>{
+    S.chart.data.datasets[i].data=hist[c]||[];
+    S.chart.data.datasets[i].hidden=!S.vis.has(c);
+  });
+  S.chart.update('none');
+  buildLegend(tf);
+}
+
+function buildLegend(tf){
+  const d=S.data[tf];
+  const el=document.getElementById('legend');
+  if(!d||!d.scores){el.innerHTML='';return;}
+  const sorted=Object.entries(d.scores).sort((a,b)=>b[1]-a[1]);
+  el.innerHTML=sorted.map(([c,v])=>{
+    const s=v>=0?'+':'',col=COLS[c],off=!S.vis.has(c)?' off':'';
+    return `<div class="leg${off}" onclick="toggleCur('${c}')">
+      <div class="leg-line" style="background:${col}"></div>
+      <span class="leg-name" style="color:${col}">${c}</span>
+      <span class="leg-score">${s}${v.toFixed(5)}</span>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+// SCORE PANEL
+// ═══════════════════════════════════════════
+function renderScores(){
+  const tfsToShow=TFS;
+  let html='';
+  tfsToShow.forEach(tf=>{
+    const d=S.data[tf];
+    const isActive=tf===(S.activeTF==='ALL'?'M15':S.activeTF);
+    if(!d||!d.scores){
+      html+=`<div class="tf-block"><div class="tf-block-hdr"><span class="tf-name">${tf}</span><span class="tf-meta">— aguardando</span></div></div>`;
+      return;
+    }
+    const maxAbs=Math.max(...d.ranked.map(r=>Math.abs(r.score)),0.000001);
+    html+=`<div class="tf-block">
+      <div class="tf-block-hdr">
+        <span class="tf-name">${tf}${isActive?' ◄':''}</span>
+        <span class="tf-meta">${d.pairsOk}/28 pares · ${d.cached?'cache':'live'}</span>
+      </div>
+      <div class="tf-rows">`;
+    d.ranked.forEach((r,i)=>{
+      const col=COLS[r.currency];
+      const pct=Math.min((Math.abs(r.score)/maxAbs)*100,100);
+      const sign=r.score>=0?'+':'';
+      const arr=r.score>0.00005?'↑':r.score<-0.00005?'↓':'→';
+      const ac=r.score>0.00005?'var(--green)':r.score<-0.00005?'var(--red)':'var(--muted)';
+      const barOp=r.score>=0?0.75:0.45;
+      html+=`<div class="sc-row" style="animation-delay:${i*0.04}s">
+        <div class="sc-rank">${i+1}</div>
+        <div class="sc-cur" style="color:${col}">${r.currency}</div>
+        <div class="sc-bar-wrap"><div class="sc-bar" style="width:${pct.toFixed(1)}%;background:${col};opacity:${barOp}"></div></div>
+        <div class="sc-val" style="color:${r.score>=0?'var(--green)':'var(--red)'}">${sign}${r.score.toFixed(5)}</div>
+        <div class="sc-arr" style="color:${ac}">${arr}</div>
+      </div>`;
+    });
+    html+=`</div></div>`;
+  });
+  document.getElementById('sc-body').innerHTML=html;
+}
+
+function renderTrades(){
+  const tf=S.activeTF==='ALL'?'M15':S.activeTF;
+  const d=S.data[tf];
+  const tb=document.getElementById('trade-block');
+  if(!d||!d.ranked||d.ranked.length<2){tb.style.display='none';return;}
+  tb.style.display='block';
+  document.getElementById('trade-tf-lbl').textContent=tf;
+  const top=d.ranked[0],bot=d.ranked[d.ranked.length-1];
+  const cT=COLS[top.currency],cB=COLS[bot.currency];
+  const spread=(top.score-bot.score).toFixed(5);
+  document.getElementById('trade-cards').innerHTML=`
+    <div class="tcard buy">
+      <div class="tcard-lbl" style="color:var(--green)">▲ COMPRAR</div>
+      <div class="tcard-pair" style="color:var(--green)">${top.currency}/${bot.currency}</div>
+      <div class="tcard-why"><span style="color:${cT}">${top.currency}</span> ${(top.score>=0?'+':'')}${top.score.toFixed(5)} · <span style="color:${cB}">${bot.currency}</span> ${bot.score.toFixed(5)}</div>
+    </div>
+    <div class="tcard sell">
+      <div class="tcard-lbl" style="color:var(--red)">▼ VENDER</div>
+      <div class="tcard-pair" style="color:var(--red)">${bot.currency}/${top.currency}</div>
+      <div class="tcard-why">Spread máximo: ${spread} · divergência de força</div>
+    </div>`;
+}
+
+function renderPairs(){
+  const tf=S.activeTF==='ALL'?'M15':S.activeTF;
+  const d=S.data[tf];
+  const pg=document.getElementById('pair-grid');
+  if(!d||!d.pairs){pg.innerHTML='<div style="color:var(--dim);font-size:9px;grid-column:1/-1;padding:4px">Aguardando...</div>';return;}
+  const top=d.pairs.filter(p=>p.ok).sort((a,b)=>Math.abs(b.slope)-Math.abs(a.slope)).slice(0,12);
+  pg.innerHTML=top.map(p=>{
+    const isPos=p.slope>=0;
+    const col=isPos?'var(--green)':'var(--red)';
+    const sign=isPos?'+':'';
+    const name=p.ticker.replace('=X','');
+    return `<div class="pair-cell">
+      <span class="pair-name">${name}</span>
+      <span class="pair-val" style="color:${col}">${sign}${p.slope.toFixed(4)}</span>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+// HISTORY
+// ═══════════════════════════════════════════
+function pushHistory(tf,scores){
+  if(!S.history[tf]){S.history[tf]={};CURS.forEach(c=>S.history[tf][c]=[]);}
+  CURS.forEach(c=>{
+    S.history[tf][c].push(+(scores[c]||0).toFixed(6));
+    if(S.history[tf][c].length>S.maxHist)S.history[tf][c].shift();
+  });
+}
+
+// ═══════════════════════════════════════════
+// FETCH
+// ═══════════════════════════════════════════
+async function doFetch(){
+  const btn=document.getElementById('fetch-btn');
+  const fi=document.getElementById('ficon');
+  const ov=document.getElementById('overlay');
+  const st=document.getElementById('status');
+  btn.disabled=true;fi.classList.add('spin');
+  ov.classList.remove('gone');
+  st.textContent='Calculando slopes para 28 pares × 5 TFs...';
+
+  try{
+    document.getElementById('ov-tf').textContent='D1 → H4 → H1 → M30 → M15 (20–40 segundos)';
+    const r=await fetch('/api/css/all/multi',{signal:AbortSignal.timeout(120000)});
+    if(!r.ok)throw new Error('Server '+r.status);
+    const d=await r.json();
+    let ok=0;
+    TFS.forEach(tf=>{
+      if(d[tf]&&!d[tf].error&&d[tf].scores){
+        S.data[tf]=d[tf];
+        pushHistory(tf,d[tf].scores);
+        ok++;
+      }
+    });
+    const n=new Date();
+    const ts=[n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
+    st.textContent=`✓ ${ok}/5 TFs · ${ts} UTC · próxima em 4min`;
+    S.countdown=240;
+  }catch(e){
+    st.textContent='Erro: '+e.message;
+  }
+
+  btn.disabled=false;fi.classList.remove('spin');
+  ov.classList.add('gone');
+  refreshChart();
+  renderScores();
+  renderTrades();
+  renderPairs();
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+buildCurBtns();
+initChart();
+setTimeout(doFetch, 600);
+</script>
+</body>
+</html>
