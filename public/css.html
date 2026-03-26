@@ -181,6 +181,17 @@ body{display:flex;flex-direction:column}
   <button class="rbtn" onclick="resetZ()">↺ RESET ZOOM</button>
 </div>
 
+<!-- XAU FORÇA BAR -->
+<div id="xau-bar" style="display:none;padding:5px 14px;background:rgba(255,215,0,.06);border-bottom:1px solid rgba(255,215,0,.2);align-items:center;gap:14px;flex-wrap:wrap">
+  <div style="font-size:9px;color:#FFD700;font-weight:600;letter-spacing:.1em;white-space:nowrap">⬡ XAU FORÇA</div>
+  <div id="xau-bar-score" style="font-size:14px;font-weight:600;color:#FFD700">—</div>
+  <div id="xau-bar-rank" style="font-size:10px;color:var(--muted)">Rank — / 9</div>
+  <div id="xau-bar-bias" style="font-size:10px;font-weight:600;color:var(--muted)">—</div>
+  <div style="width:1px;height:16px;background:rgba(255,215,0,.3)"></div>
+  <div id="xau-bar-detail" style="font-size:9px;color:var(--muted);flex:1">Aguardando...</div>
+  <div style="font-size:9px;color:rgba(255,215,0,.5)">Wall Street Força Funds · Metodologia CSS</div>
+</div>
+
 <div class="body">
   <div class="chart-area">
     <div class="chart-top">
@@ -224,8 +235,8 @@ body{display:flex;flex-direction:column}
 </div>
 
 <script>
-const COLS={USD:'#60a5fa',EUR:'#34d399',GBP:'#a78bfa',JPY:'#f87171',CHF:'#fbbf24',CAD:'#f97316',AUD:'#22d3ee',NZD:'#e879f9'};
-const CURS=['USD','EUR','GBP','JPY','CHF','CAD','AUD','NZD'];
+const COLS={USD:'#60a5fa',EUR:'#34d399',GBP:'#a78bfa',JPY:'#f87171',CHF:'#fbbf24',CAD:'#f97316',AUD:'#22d3ee',NZD:'#e879f9',XAU:'#FFD700'};
+const CURS=['USD','EUR','GBP','JPY','CHF','CAD','AUD','NZD','XAU'];
 const TFS=['D1','H4','H1','M30','M15'];
 const REFRESH={D1:45*60e3,H4:20*60e3,H1:10*60e3,M30:6*60e3,M15:4*60e3};
 
@@ -241,6 +252,7 @@ setInterval(()=>{
 
 // Currency buttons
 function buildBtns(){
+  // XAU added dynamically from server data
   document.getElementById('cur-btns').innerHTML=CURS.map(c=>{
     const col=COLS[c];
     return `<button class="cbtn" id="cb-${c}" style="color:${col};border-color:${col}55;background:${col}18" onclick="toggleCur('${c}')">${c}</button>`;
@@ -457,6 +469,30 @@ function renderMFC(){
   const tf=S.activeTF==='ALL'?'M15':S.activeTF,d=S.data[tf];if(!d?.ranked)return;
   const ma=Math.max(...d.ranked.map(r=>Math.abs(r.score)),1e-9);
   document.getElementById('mfc-ts').textContent=d.ts?d.ts.substring(11,16)+' UTC':'';
+  // XAU signal bar update
+  if(d.scores?.XAU!==undefined){
+    const xbar=document.getElementById('xau-bar');
+    if(xbar) xbar.style.display='flex';
+    const xs=d.scores.XAU;
+    const xpos=d.ranked.findIndex(r=>r.currency==='XAU')+1;
+    const xtotal=d.ranked.length;
+    const xscoreEl=document.getElementById('xau-bar-score');
+    if(xscoreEl){xscoreEl.textContent=(xs>=0?'+':'')+xs.toFixed(4)+'%';xscoreEl.style.color=xs>=OB_LEVEL?'var(--a)':xs<=OS_LEVEL?'var(--r)':'#FFD700';}
+    const xrankEl=document.getElementById('xau-bar-rank');
+    if(xrankEl) xrankEl.textContent='Rank '+xpos+' / '+xtotal;
+    const xbiasEl=document.getElementById('xau-bar-bias');
+    if(xbiasEl){
+      const label=xs>=OB_LEVEL?'⚠ SOBRECOMPRADO':xs<=OS_LEVEL?'⚠ SOBREVENDIDO':xpos<=3?'▲ FORTE':xpos>=xtotal-2?'▼ FRACO':'→ NEUTRO';
+      const col=xs>=OB_LEVEL?'var(--a)':xs<=OS_LEVEL?'var(--r)':xpos<=3?'var(--g)':xpos>=xtotal-2?'var(--r)':'var(--muted)';
+      xbiasEl.textContent=label; xbiasEl.style.color=col;
+    }
+    const xdetEl=document.getElementById('xau-bar-detail');
+    if(xdetEl){
+      const stronger=d.ranked.filter(r=>r.score>xs).map(r=>r.currency).join(', ')||'none';
+      xdetEl.textContent=xs>0?`XAU ganha contra ${d.ranked.filter(r=>r.currency!=='XAU'&&r.score<xs).length} moedas · Mais fortes: ${stronger}`:
+                               `XAU perde contra ${d.ranked.filter(r=>r.currency!=='XAU'&&r.score>xs).length} moedas`;
+    }
+  }
   document.getElementById('mfc-rows').innerHTML=d.ranked.map((r,i)=>{
     const col=COLS[r.currency],pct=Math.min((Math.abs(r.score)/ma)*100,100);
     const s=r.score>=0?'+':'',arr=r.score>0.005?'↑':r.score<-0.005?'↓':'→';
