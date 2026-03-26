@@ -16,6 +16,7 @@ app.get('/health', (req, res) => res.json({ status:'ok', time:new Date().toISOSt
 // 28 PAIRS + CONFIG
 // ══════════════════════════════════════════════════════════
 const PAIRS = [
+  // Standard 28 forex pairs
   {t:'EURUSD=X',b:'EUR',q:'USD'},{t:'GBPUSD=X',b:'GBP',q:'USD'},
   {t:'AUDUSD=X',b:'AUD',q:'USD'},{t:'NZDUSD=X',b:'NZD',q:'USD'},
   {t:'USDCAD=X',b:'USD',q:'CAD'},{t:'USDCHF=X',b:'USD',q:'CHF'},
@@ -30,8 +31,15 @@ const PAIRS = [
   {t:'NZDCAD=X',b:'NZD',q:'CAD'},{t:'NZDCHF=X',b:'NZD',q:'CHF'},
   {t:'NZDJPY=X',b:'NZD',q:'JPY'},{t:'CADCHF=X',b:'CAD',q:'CHF'},
   {t:'CADJPY=X',b:'CAD',q:'JPY'},{t:'CHFJPY=X',b:'CHF',q:'JPY'},
+  // XAU (Gold) vs major currencies — Wall Street Força Funds method
+  {t:'XAUUSD=X',b:'XAU',q:'USD'},{t:'XAUEUR=X',b:'XAU',q:'EUR'},
+  {t:'XAUGBP=X',b:'XAU',q:'GBP'},{t:'XAUJPY=X',b:'XAU',q:'JPY'},
+  {t:'XAUCHF=X',b:'XAU',q:'CHF'},{t:'XAUCAD=X',b:'XAU',q:'CAD'},
+  {t:'XAUAUD=X',b:'XAU',q:'AUD'},{t:'XAUNZD=X',b:'XAU',q:'NZD'},
 ];
 const CURS = ['USD','EUR','GBP','JPY','CHF','CAD','AUD','NZD'];
+// XAU is calculated separately using its own pairs
+const CURS_WITH_XAU = ['USD','EUR','GBP','JPY','CHF','CAD','AUD','NZD','XAU'];
 
 const TF_CFG = {
   D1:  { iv:'1d',  rng:'120d', pts:60 },
@@ -99,7 +107,11 @@ async function calcCSS(tfKey) {
   });
 
   const ok = pairData.filter(p => p.ok);
-  if (ok.length < 10) throw new Error(`Only ${ok.length}/28 pairs`);
+  // Separate forex pairs from XAU pairs
+  const forexOk = ok.filter(p => p.b !== 'XAU' && p.q !== 'XAU');
+  const xauOk   = ok.filter(p => p.b === 'XAU' || p.q === 'XAU');
+
+  if (forexOk.length < 10) throw new Error(`Only ${forexOk.length}/28 forex pairs`);
 
   const minLen = Math.min(...ok.map(p=>p.candles.length));
   const trimTo = Math.min(minLen, cfg.pts+3);
@@ -108,17 +120,28 @@ async function calcCSS(tfKey) {
 
   ok.forEach(p => { const b0=p.candles[0].c||1; p.pct=p.candles.map(c=>((c.c-b0)/b0)*100); });
 
+  // Calculate forex currency strength (8 currencies)
   const cnt={}; CURS.forEach(c=>cnt[c]=0);
-  ok.forEach(p => { cnt[p.b]++; cnt[p.q]++; });
+  forexOk.forEach(p => { cnt[p.b]++; cnt[p.q]++; });
 
-  const raw={}; CURS.forEach(c=>raw[c]=new Array(N).fill(0));
+  const raw={}; CURS_WITH_XAU.forEach(c=>raw[c]=new Array(N).fill(0));
   for (let i=0; i<N; i++) {
-    const s={}; CURS.forEach(c=>s[c]=0);
-    ok.forEach(p => { s[p.b]+=p.pct[i]; s[p.q]-=p.pct[i]; });
+    const s={}; CURS_WITH_XAU.forEach(c=>s[c]=0);
+    forexOk.forEach(p => { s[p.b]+=p.pct[i]; s[p.q]-=p.pct[i]; });
     CURS.forEach(c => { raw[c][i] = cnt[c]>0 ? s[c]/cnt[c] : 0; });
+
+    // XAU strength: average of XAU vs all currencies
+    if (xauOk.length > 0) {
+      let xauSum=0, xauCnt=0;
+      xauOk.forEach(p => {
+        if (p.b==='XAU') { xauSum+=p.pct[i]; xauCnt++; }
+        else             { xauSum-=p.pct[i]; xauCnt++; }
+      });
+      raw['XAU'][i] = xauCnt>0 ? xauSum/xauCnt : 0;
+    }
   }
 
-  const labels = ok[0].candles.map(c => {
+  const labels = (ok[0]||forexOk[0]).candles.map(c => {
     const d = new Date(c.t*1000);
     if (tfKey==='D1') return `${d.getDate()}/${d.getMonth()+1}`;
     const hh=String(d.getHours()).padStart(2,'0'), mm=String(d.getMinutes()).padStart(2,'0');
@@ -126,12 +149,15 @@ async function calcCSS(tfKey) {
     return `${hh}:${mm}`;
   });
 
-  const scores={}; CURS.forEach(c => { scores[c]=+raw[c][N-1].toFixed(5); });
-  const ranked=CURS.map(c=>({currency:c,score:scores[c]})).sort((a,b)=>b.score-a.score);
+  const allCurs = xauOk.length>0 ? CURS_WITH_XAU : CURS;
+  const scores={}; allCurs.forEach(c => { scores[c]=+raw[c][N-1].toFixed(5); });
+  const ranked=allCurs.map(c=>({currency:c,score:scores[c]})).sort((a,b)=>b.score-a.score);
 
   return {
-    tf:tfKey, labels, series:raw, scores, ranked,
-    pairsOk:ok.length, points:N,
+    tf:tfKey, labels,
+    series: Object.fromEntries(Object.entries(raw).filter(([k])=>raw[k].some(v=>v!==0))),
+    scores, ranked,
+    pairsOk:ok.length, xauPairs:xauOk.length, points:N,
     pairs:ok.map(p=>({ticker:p.t,base:p.b,quote:p.q,score:+p.pct[N-1].toFixed(5),ok:true})),
     ts:new Date().toISOString()
   };
